@@ -32,10 +32,6 @@ func ExampleDecode() {
         log.Fatal(err)
     }
 
-    // Optionally register camera makenote data parsing - currently Nikon and
-    // Canon are supported.
-    exif.RegisterParsers(mknote.All...)
-
     x, err := exif.Decode(f)
     if err != nil {
         log.Fatal(err)

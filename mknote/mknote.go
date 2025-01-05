@@ -14,6 +14,10 @@ var (
 	All = []exif.Parser{Canon, NikonV3, AdobeDNG, Sony}
 )
 
+func init() {
+        exif.RegisterParsers(All...)
+}
+
 func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr exif.FieldName, fieldMap map[uint16]exif.FieldName) error {
 	tag, err := x.Get(ptr)
 	if err != nil {
