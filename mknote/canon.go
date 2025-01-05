@@ -9,6 +9,41 @@ import (
 	"github.com/evanoberholster/exiftools/tiff"
 )
 
+// Canon is an exif.Parser for canon makernote data.
+var Canon = &canon{}
+type canon struct{}
+
+// Parse decodes all Canon makernote data found in x and adds it to x.
+func (_ *canon) Parse(x *exif.Exif) error {
+	m, err := x.Get(exif.MakerNote)
+	if err != nil {
+		return nil
+	}
+
+	// Confirm that exif.Make is Canon
+	if mk, err := x.Get(exif.Make); err != nil {
+		return err
+	} else {
+		if val, err := mk.StringVal(); err != nil || val != "Canon" {
+			return nil
+		}
+	}
+
+	// Canon notes are a single IFD directory with no header.
+	// Reader offsets need to be w.r.t. the original tiff structure.
+	cReader := bytes.NewReader(append(make([]byte, m.ValOffset), m.Val...))
+	cReader.Seek(int64(m.ValOffset), 0)
+
+	mkNotesDir, _, err := tiff.DecodeDir(cReader, x.Tiff.Order)
+	if err != nil {
+		return err
+	}
+	// Parse Canon MakerFields
+	x.LoadTags(mkNotesDir, makerNoteCanonFields, false)
+
+	return nil
+}
+
 // Canon-specific fields
 var (
 	CanonCameraSettings   exif.FieldName = "Canon.CameraSettings" // A sub-IFD

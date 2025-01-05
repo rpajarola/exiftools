@@ -4,6 +4,44 @@ import (
 	"github.com/evanoberholster/exiftools/exif"
 )
 
+// AdobeDNG is an exif.Parse for DNG subIfds.
+var AdobeDNG = &adobeDNG{}
+type adobeDNG struct{}
+
+// Parse decodes all Adobe DNG subIFDS found in x and adds it to x.
+func (_ *adobeDNG) Parse(x *exif.Exif) error {
+	m, err := x.Get(exif.SubIfdsPointer)
+	if err != nil {
+		return nil
+	}
+	if !(m.Count > 0) {
+		return nil
+	}
+	subIfds := []map[uint16]exif.FieldName{
+		SubIFD0Fields,
+		SubIFD1Fields,
+		SubIFD2Fields,
+	}
+	r := bytes.NewReader(x.Raw)
+	for i, sub := range subIfds {
+		offset, err := m.Int64(i)
+		if err != nil {
+			return nil
+		}
+		_, err = r.Seek(offset, 0)
+		if err != nil {
+			return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", exif.SubIfdsPointer, err)
+		}
+		subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
+		if err != nil {
+			return fmt.Errorf("exif: sub-IFD %s decode failed: %v", exif.SubIfdsPointer, err)
+		}
+		x.LoadTags(subDir, sub, false)
+	}
+
+	return nil
+}
+
 // PreviewImageTags
 var (
 	SubIfd0PreviewImage = exif.NewPreviewImageTag(subIfdMap("SubIfd0", PreviewImageStart), subIfdMap("SubIfd0", PreviewImageLength), subIfdMap("SubIfd0", Compression))

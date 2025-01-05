@@ -2,6 +2,45 @@ package mknote
 
 import "github.com/evanoberholster/exiftools/exif"
 
+// NikonV3 is an exif.Parser for nikon makernote data.
+var NikonV3 = &nikonV3{}
+type nikonV3 struct{}
+
+// Parse decodes all Nikon makernote data found in x and adds it to x.
+func (_ *nikonV3) Parse(x *exif.Exif) error {
+	m, err := x.Get(exif.MakerNote)
+	if err != nil {
+		return nil
+	}
+	if len(m.Val) < 6 {
+		return nil
+	}
+	if bytes.Compare(m.Val[:6], []byte("Nikon\000")) != 0 {
+		return nil
+	}
+
+	// Nikon v3 maker note is a self-contained IFD (offsets are relative
+	// to the start of the maker note)
+	nReader := bytes.NewReader(m.Val[10:])
+	mkNotes, err := tiff.Decode(nReader)
+	if err != nil {
+		return err
+	}
+	makerNoteOffset := m.ValOffset + 10
+	x.LoadTags(mkNotes.Dirs[0], makerNoteNikon3Fields, false)
+
+	if err := loadSubDir(x, nReader, NikonPreviewPtr, makerNoteNikon3PreviewFields); err != nil {
+	}
+	previewTag, err := x.Get(NikonPreviewImageStart)
+	if err == nil {
+		offset, _ := previewTag.Int64(0)
+		previewTag.SetInt(0, offset+int64(makerNoteOffset))
+		x.Update(NikonPreviewImageStart, previewTag)
+	}
+
+	return nil
+}
+
 // Nikon-specific Maker Note Sub-Ifd pointers
 var ()
 
