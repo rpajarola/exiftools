@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifd"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdexif"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifd"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdexif"
 )
 
 // Errors for Parsing of Time

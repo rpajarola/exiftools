@@ -1,6 +1,6 @@
 package mknote
 
-import "github.com/evanoberholster/exiftools/exif"
+import "github.com/rpajarola/exiftools/exif"
 
 // Useful resources used in creating these tables:
 //    http://www.exiv2.org/makernote.html

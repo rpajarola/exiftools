@@ -1,6 +1,6 @@
 package ifd
 
-import "github.com/evanoberholster/exiftools/exiftool/exif"
+import "github.com/rpajarola/exiftools/exiftool/exif"
 
 // IfdPath is an array of TagID representing an IFD
 type IfdPath []exif.TagID

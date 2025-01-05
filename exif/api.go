@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evanoberholster/exiftools/models"
-	"github.com/evanoberholster/exiftools/tiff"
+	"github.com/rpajarola/exiftools/models"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 // GetImageSize - Get Image Width and Height

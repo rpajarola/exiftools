@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/models"
-	"github.com/evanoberholster/exiftools/tiff"
+	"github.com/rpajarola/exiftools/models"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 //go:generate go run genCanon.go

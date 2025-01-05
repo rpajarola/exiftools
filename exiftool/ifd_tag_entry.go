@@ -3,7 +3,7 @@ package exiftool
 import (
 	"encoding/binary"
 
-	"github.com/evanoberholster/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool/exif"
 )
 
 // IfdTagEntry refers to a tag in the loaded EXIF block.

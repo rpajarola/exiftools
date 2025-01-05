@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/exiftool"
-	"github.com/evanoberholster/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool"
+	"github.com/rpajarola/exiftools/exiftool/exif"
 )
 
 // ExifResults contains an exifReader, the tags and offsets

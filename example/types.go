@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"github.com/evanoberholster/exiftools/models"
-	"github.com/evanoberholster/exiftools/xmp"
+	"github.com/rpajarola/exiftools/models"
+	"github.com/rpajarola/exiftools/xmp"
 )
 
 // Metadata -

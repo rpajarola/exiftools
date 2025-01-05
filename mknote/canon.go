@@ -1,12 +1,13 @@
 package mknote
 
 import (
+	"bytes"
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/exif"
-	"github.com/evanoberholster/exiftools/mknote/canontags"
-	"github.com/evanoberholster/exiftools/models"
-	"github.com/evanoberholster/exiftools/tiff"
+	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/mknote/canontags"
+	"github.com/rpajarola/exiftools/models"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 // Canon is an exif.Parser for canon makernote data.
@@ -60,6 +61,7 @@ var (
 	Canon0x00b5           exif.FieldName = "Canon.0x00b5"
 	Canon0x00c0           exif.FieldName = "Canon.0x00c0"
 	Canon0x00c1           exif.FieldName = "Canon.0x00c1"
+	CanonImageUniqueID    exif.FieldName = "Canon.ImageUniqueID"
 )
 
 var makerNoteCanonFields = map[uint16]exif.FieldName{
@@ -112,7 +114,6 @@ type CanonRaw struct {
 	CanonShotInfo       canontags.CanonShotInfo `json:"CanonShotInfo"`
 	CanonCameraSettings CameraSettings
 	CanonAFInfo         canontags.CanonAFInfo
-	CanonImageUniqueID  canontags.CanonImageUniqueID
 }
 
 // Get CanonRaw from exif

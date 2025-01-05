@@ -1,9 +1,9 @@
 package ifdmknote
 
 import (
-	"github.com/evanoberholster/exiftools/exiftool/exif"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifd"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdexif"
+	"github.com/rpajarola/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifd"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdexif"
 )
 
 // Makernote Name and TagID

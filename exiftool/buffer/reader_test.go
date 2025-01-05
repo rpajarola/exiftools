@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/evanoberholster/exiftools/exiftool"
+	"github.com/rpajarola/exiftools/exiftool"
 )
 
 var path = "../../../test/img/20.jpg"

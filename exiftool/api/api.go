@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifd"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdexif"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifd"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdexif"
 )
 
 // API Errors

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool/exif"
 )
 
 // Enumerator Errors

@@ -3,7 +3,7 @@ package canontags_test
 import (
 	"testing"
 
-	"github.com/evanoberholster/exiftools/mknote/canontags"
+	"github.com/rpajarola/exiftools/mknote/canontags"
 )
 
 // Test CanonModelID Values

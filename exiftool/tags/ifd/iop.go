@@ -1,7 +1,7 @@
 package ifd
 
 import (
-	"github.com/evanoberholster/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool/exif"
 )
 
 // IfdIop Name and TagID

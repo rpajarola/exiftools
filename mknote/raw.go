@@ -1,7 +1,7 @@
 package mknote
 
 import (
-	"github.com/evanoberholster/exiftools/exif"
+	"github.com/rpajarola/exiftools/exif"
 )
 
 // CameraSettingsField -

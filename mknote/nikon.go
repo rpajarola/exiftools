@@ -1,9 +1,15 @@
 package mknote
 
-import "github.com/evanoberholster/exiftools/exif"
+import (
+	"bytes"
+
+	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/tiff"
+)
 
 // NikonV3 is an exif.Parser for nikon makernote data.
 var NikonV3 = &nikonV3{}
+
 type nikonV3 struct{}
 
 // Parse decodes all Nikon makernote data found in x and adds it to x.

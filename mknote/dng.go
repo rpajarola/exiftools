@@ -1,11 +1,16 @@
 package mknote
 
 import (
-	"github.com/evanoberholster/exiftools/exif"
+	"bytes"
+	"fmt"
+
+	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 // AdobeDNG is an exif.Parse for DNG subIfds.
 var AdobeDNG = &adobeDNG{}
+
 type adobeDNG struct{}
 
 // Parse decodes all Adobe DNG subIFDS found in x and adds it to x.

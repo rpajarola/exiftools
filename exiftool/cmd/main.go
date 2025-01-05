@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/evanoberholster/exiftools/exiftool"
-	"github.com/evanoberholster/exiftools/exiftool/api"
-	"github.com/evanoberholster/exiftools/exiftool/buffer"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifd"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdexif"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdmknote"
+	"github.com/rpajarola/exiftools/exiftool"
+	"github.com/rpajarola/exiftools/exiftool/api"
+	"github.com/rpajarola/exiftools/exiftool/buffer"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifd"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdexif"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdmknote"
 )
 
 func main() {

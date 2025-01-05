@@ -10,10 +10,10 @@ import (
 
 	"github.com/TylerBrock/colorjson"
 
-	"github.com/evanoberholster/exiftools/exif"
-	"github.com/evanoberholster/exiftools/mknote"
-	"github.com/evanoberholster/exiftools/xmp"
-	"github.com/evanoberholster/filetype"
+	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/xmp"
+	//"github.com/rpajarola/filetype"
 )
 
 func main() {
@@ -39,12 +39,12 @@ func NewMetadata(f *os.File) *Metadata {
 		log.Println(err)
 	}
 
-	kind, _ := filetype.MatchReader(f)
+	//kind, _ := filetype.MatchReader(f)
 
 	// Check file MimeType
 	return &Metadata{
 		FileSize: fi.Size(),
-		MIMEType: kind.MIME.Value,
+		MIMEType: "unknown", // kind.MIME.Value,
 	}
 
 }

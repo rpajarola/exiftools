@@ -9,14 +9,14 @@ import (
 	"github.com/dsoprea/go-exif/v2"
 	exifcommon "github.com/dsoprea/go-exif/v2/common"
 	log "github.com/dsoprea/go-logging"
-	exifold "github.com/evanoberholster/exiftools/exif"
-	"github.com/evanoberholster/exiftools/exiftool"
-	"github.com/evanoberholster/exiftools/exiftool/api"
-	"github.com/evanoberholster/exiftools/exiftool/buffer"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifd"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdexif"
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdmknote"
-	mknoteold "github.com/evanoberholster/exiftools/mknote"
+	exifold "github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/exiftool"
+	"github.com/rpajarola/exiftools/exiftool/api"
+	"github.com/rpajarola/exiftools/exiftool/buffer"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifd"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdexif"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdmknote"
+	mknoteold "github.com/rpajarola/exiftools/mknote"
 )
 
 func BenchmarkExifDecode200(b *testing.B) {

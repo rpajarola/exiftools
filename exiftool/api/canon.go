@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/exiftool/tags/ifdmknote"
+	"github.com/rpajarola/exiftools/exiftool/tags/ifdmknote"
 )
 
 // CanonCameraSettings - Canon Makernote Camera Settings

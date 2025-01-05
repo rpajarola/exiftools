@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/evanoberholster/exiftools/exif"
-	"github.com/evanoberholster/exiftools/tiff"
+	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 var (

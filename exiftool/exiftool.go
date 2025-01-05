@@ -3,7 +3,7 @@ package exiftool
 import (
 	"errors"
 
-	"github.com/evanoberholster/exiftools/exiftool/exif"
+	"github.com/rpajarola/exiftools/exiftool/exif"
 )
 
 var ifdTagNames = make(map[string]TagNameMap)
