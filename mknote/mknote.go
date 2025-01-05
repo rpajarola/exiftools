@@ -11,7 +11,7 @@ import (
 
 var (
 	// All is a list of all available makernote parsers
-	All = []exif.Parser{Canon, NikonV3, AdobeDNG}
+	All = []exif.Parser{Canon, NikonV3, AdobeDNG, Sony}
 )
 
 func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr exif.FieldName, fieldMap map[uint16]exif.FieldName) error {
