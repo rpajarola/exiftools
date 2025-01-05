@@ -67,6 +67,8 @@ func (_ *canon) Parse(x *exif.Exif) error {
 
 	// Confirm that exif.Make is Canon
 	if mk, err := x.Get(exif.Make); err != nil {
+		return err
+	} else {
 		if val, err := mk.StringVal(); err != nil || val != "Canon" {
 			return nil
 		}
