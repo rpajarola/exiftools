@@ -11,6 +11,7 @@ import (
 
 // Canon is an exif.Parser for canon makernote data.
 var Canon = &canon{}
+
 type canon struct{}
 
 // Parse decodes all Canon makernote data found in x and adds it to x.
@@ -81,6 +82,7 @@ var makerNoteCanonFields = map[uint16]exif.FieldName{
 	0x0015: SerialNumberFormat,
 	0x001a: SuperMacro,
 	0x0026: CanonAFInfo,
+	0x0028: CanonImageUniqueID,
 	0x0035: CanonTimeInfo,
 	0x0083: OriginalDecisionDataOffset,
 	0x00a4: WhiteBalanceTable,
@@ -110,6 +112,7 @@ type CanonRaw struct {
 	CanonShotInfo       canontags.CanonShotInfo `json:"CanonShotInfo"`
 	CanonCameraSettings CameraSettings
 	CanonAFInfo         canontags.CanonAFInfo
+	CanonImageUniqueID  canontags.CanonImageUniqueID
 }
 
 // Get CanonRaw from exif
