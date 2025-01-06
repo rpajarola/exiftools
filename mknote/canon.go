@@ -31,12 +31,13 @@ var (
 	Canon0x00c0           exif.FieldName = "Canon.0x00c0"
 	Canon0x00c1           exif.FieldName = "Canon.0x00c1"
 	CanonImageUniqueID    exif.FieldName = "Canon.ImageUniqueID"
+	CanonFocalLength      exif.FieldName = "Canon.FocalLength"
 )
 
 var makerNoteCanonFields = map[uint16]exif.FieldName{
 	0x0000: Canon0x0000,
 	0x0001: CanonCameraSettings,
-	0x0002: exif.FocalLength,
+	0x0002: CanonFocalLength,
 	0x0003: Canon0x0003,
 	0x0004: CanonShotInfo,
 	0x0005: Panorama,
