@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/rpajarola/exiftools/exif"
-	"github.com/rpajarola/exiftools/mknote"
+	_ "github.com/rpajarola/exiftools/mknote"
 )
 
 func ExampleDecode() {
@@ -16,10 +16,6 @@ func ExampleDecode() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// Optionally register camera makenote data parsing - currently Nikon and
-	// Canon are supported.
-	exif.RegisterParsers(mknote.All...)
 
 	x, err := exif.Decode(f)
 	if err != nil {
@@ -48,10 +44,6 @@ func ExampleDecodeWithParseHeader() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// Optionally register camera makenote data parsing - currently Nikon and
-	// Canon are supported.
-	exif.RegisterParsers(mknote.All...)
 
 	x, err := exif.DecodeWithParseHeader(f)
 	if err != nil {
