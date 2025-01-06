@@ -279,7 +279,6 @@ func Decode(r io.Reader) (*Exif, error) {
 		tif, err = tiff.Decode(tr)
 		er = bytes.NewReader(b.Bytes())
 	case assumeJPEG:
-		fmt.Println("JPEG")
 		// Locate the JPEG APP1 header.
 		sec, err = newAppSec(jpegAPP1, r)
 		if err != nil {
