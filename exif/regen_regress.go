@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -13,8 +14,8 @@ import (
 	"strings"
 
 	"github.com/rpajarola/exiftools/exif"
-	"github.com/rpajarola/exiftools/tiff"
 	_ "github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/tiff"
 )
 
 func main() {

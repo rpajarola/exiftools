@@ -30,31 +30,30 @@ func TestDecode(t *testing.T) {
 		t.Fatalf("Could not read sample directory '%s': %v", fpath, err)
 	}
 
-	cnt := 0
 	for _, name := range names {
 		if !strings.HasSuffix(name, ".jpg") {
 			t.Logf("skipping non .jpg file %v", name)
 			continue
 		}
-		t.Logf("testing file %v", name)
-		f, err := os.Open(filepath.Join(fpath, name))
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(name, func(t *testing.T) {
+			f, err := os.Open(filepath.Join(fpath, name))
+			if err != nil {
+				t.Errorf("open: %v", err)
+			}
 
-		x, err := Decode(f)
-		if err != nil {
-			t.Fatal(err)
-		} else if x == nil {
-			t.Fatalf("No error and yet %v was not decoded", name)
-		}
+			x, err := Decode(f)
+			if err != nil {
+				t.Errorf("decode: %v", err)
+				return
+			} else if x == nil {
+				t.Errorf("no error and yet %v was not decoded", name)
+				return
+			}
 
-		t.Logf("checking pic %v", name)
-		x.Walk(&walker{name, t})
-		cnt++
-	}
-	if cnt != len(regressExpected) {
-		t.Errorf("Did not process enough samples, got %d, want %d", cnt, len(regressExpected))
+			if err := x.Walk(&walker{name, t}); err != nil {
+				t.Errorf("walk: %v", err)
+			}
+		})
 	}
 }
 
@@ -102,8 +101,7 @@ func (w *walker) Walk(field FieldName, tag *tiff.Tag) error {
 	// this needs to be commented out when regenerating regress expected vals
 	pic := regressExpected[w.picName]
 	if pic == nil {
-		w.t.Errorf("   regression data not found")
-		return nil
+		return fmt.Errorf("regression data not found")
 	}
 
 	exp, ok := pic[string(field)]
