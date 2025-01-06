@@ -45,7 +45,7 @@ func main() {
 
 func makeExpected(files []string, w io.Writer) {
 	fmt.Fprintf(w, "package exif\n\n")
-	fmt.Fprintf(w, "var regressExpected = map[string]map[FieldName]string{\n")
+	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n")
 
 	for _, name := range files {
 		if !strings.HasSuffix(name, ".jpg") {
@@ -65,11 +65,7 @@ func makeExpected(files []string, w io.Writer) {
 
 		var items []string
 		x.Walk(walkFunc(func(name exif.FieldName, tag *tiff.Tag) error {
-			if strings.HasPrefix(string(name), exif.UnknownPrefix) {
-				items = append(items, fmt.Sprintf("\"%v\": `%v`,\n", name, tag.String()))
-			} else {
-				items = append(items, fmt.Sprintf("%v: `%v`,\n", name, tag.String()))
-			}
+			items = append(items, fmt.Sprintf("\"%v\": `%v`,\n", name, tag.String()))
 			return nil
 		}))
 		sort.Strings(items)
