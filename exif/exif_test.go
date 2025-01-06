@@ -127,7 +127,7 @@ func (w *walker) Walk(field FieldName, tag *tiff.Tag) error {
 }
 
 func TestMarshal(t *testing.T) {
-	name := filepath.Join(*dataDir, "sample1.jpg")
+	name := filepath.Join(*dataDir, testDataDir, "sample1.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -185,7 +185,7 @@ func TestParseTagDegreesString(t *testing.T) {
 
 // Make sure we error out early when a tag had a count of MaxUint32
 func TestMaxUint32CountError(t *testing.T) {
-	name := filepath.Join(*dataDir, "corrupt/max_uint32_exif.jpg")
+	name := filepath.Join(*dataDir, testDataDir, "corrupt/max_uint32_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -203,7 +203,7 @@ func TestMaxUint32CountError(t *testing.T) {
 
 // Make sure we error out early with tag data sizes larger than the image file
 func TestHugeTagError(t *testing.T) {
-	name := filepath.Join(*dataDir, "corrupt/huge_tag_exif.jpg")
+	name := filepath.Join(*dataDir, testDataDir, "corrupt/huge_tag_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -221,7 +221,7 @@ func TestHugeTagError(t *testing.T) {
 
 // Check for a 0-length tag value
 func TestZeroLengthTagError(t *testing.T) {
-	name := filepath.Join(*dataDir, "corrupt/infinite_loop_exif.jpg")
+	name := filepath.Join(*dataDir, testDataDir, "corrupt/infinite_loop_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
