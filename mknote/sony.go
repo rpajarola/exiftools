@@ -3,7 +3,6 @@ package mknote
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 
 	"github.com/rpajarola/exiftools/exif"
 	"github.com/rpajarola/exiftools/tiff"
@@ -69,8 +68,24 @@ func (_ *sony) Parse(x *exif.Exif) error {
 	}
 	descramble0x9050(m9050.Val)
 
-	m9050Dir.Tags = append(m9050Dir.Tags, makeTag(Sony0x9050NameToFields[SonyShutterCount], tiff.DTLong, 1, []byte{m9050.Val[0x32], m9050.Val[0x33], m9050.Val[0x34], 0}))
-	m9050Dir.Tags = append(m9050Dir.Tags, makeTag(Sony0x9050NameToFields[SonyInternalSerialNumber], tiff.DTLong, 1, []byte{m9050.Val[0x7c], m9050.Val[0x7d], m9050.Val[0x7e], m9050.Val[0x7f]}))
+	m9050Dir.Tags = append(
+		m9050Dir.Tags,
+		tiff.MakeTag(
+			Sony0x9050NameToFields[SonyShutterCount],
+			tiff.DTLong,
+			1,
+			binary.LittleEndian,
+			[]byte{m9050.Val[0x32], m9050.Val[0x33], m9050.Val[0x34], 0},
+		))
+	m9050Dir.Tags = append(
+		m9050Dir.Tags,
+		tiff.MakeTag(
+			Sony0x9050NameToFields[SonyInternalSerialNumber],
+			tiff.DTLong,
+			1,
+			binary.LittleEndian,
+			[]byte{m9050.Val[0x7c], m9050.Val[0x7d], m9050.Val[0x7e], m9050.Val[0x7f]},
+		))
 
 	x.LoadTags(m9050Dir, Sony0x9050Fields, true)
 	return nil
@@ -92,21 +107,4 @@ func descramble0x9050(val []byte) {
 	for i, v := range val {
 		val[i] = byte(tbl[v])
 	}
-}
-
-func makeTag(id uint16, dt tiff.DataType, count uint32, val []byte) *tiff.Tag {
-	tagBytes := []byte{}
-	tagBytes = binary.LittleEndian.AppendUint16(tagBytes, uint16(id))
-	tagBytes = binary.LittleEndian.AppendUint16(tagBytes, uint16(dt))
-	tagBytes = binary.LittleEndian.AppendUint32(tagBytes, count)
-	tagBytes = append(tagBytes, val...)
-
-	tagReader := bytes.NewReader(tagBytes)
-	if tag, err := tiff.DecodeTag(tagReader, binary.LittleEndian); err == nil {
-		fmt.Printf("MakeTag %v %v\n", tag.Id, tag)
-		return tag
-	} else {
-		fmt.Printf("MakeTag error: %v\n", err)
-	}
-	return nil
 }

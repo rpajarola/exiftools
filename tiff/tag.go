@@ -195,6 +195,18 @@ func DecodeTag(r ReadAtReader, order binary.ByteOrder) (*Tag, error) {
 	return t, t.convertVals()
 }
 
+func MakeTag(id uint16, dt DataType, count uint32, order binary.ByteOrder, val []byte) *Tag {
+	res := Tag{
+		Id:    id,
+		Type:  dt,
+		Count: count,
+		Val:   val,
+		order: order,
+	}
+	res.convertVals()
+	return &res
+}
+
 func (t *Tag) convertVals() error {
 	r := bytes.NewReader(t.Val)
 
