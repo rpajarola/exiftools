@@ -16,10 +16,12 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
+const testDataDir = "testdata"
+
 var dataDir = flag.String("test_data_dir", ".", "Directory where the data files for testing are located")
 
 func TestDecode(t *testing.T) {
-	fpath := filepath.Join(*dataDir, "samples")
+	fpath := filepath.Join(*dataDir, testDataDir)
 	f, err := os.Open(fpath)
 	if err != nil {
 		t.Fatalf("Could not open sample directory '%s': %v", fpath, err)
@@ -58,7 +60,7 @@ func TestDecode(t *testing.T) {
 }
 
 func TestDecodeRawEXIF(t *testing.T) {
-	rawFile := filepath.Join(*dataDir, "samples", "raw.exif")
+	rawFile := filepath.Join(*dataDir, testDataDir, "raw.exif")
 	raw, err := os.ReadFile(rawFile)
 	if err != nil {
 		t.Fatal(err)

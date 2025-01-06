@@ -18,6 +18,8 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
+const testDataDir = "testdata"
+
 func main() {
 	flag.Parse()
 	fname := flag.Arg(0)
@@ -28,7 +30,7 @@ func main() {
 	}
 	defer dst.Close()
 
-	dir, err := os.Open("samples")
+	dir, err := os.Open(testDataDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,7 +42,7 @@ func main() {
 	}
 	sort.Strings(names)
 	for i, name := range names {
-		names[i] = filepath.Join("samples", name)
+		names[i] = filepath.Join(testDataDir, name)
 	}
 	makeExpected(names, dst)
 }
