@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"strconv"
 	"strings"
@@ -155,7 +154,7 @@ var stagePrefix = map[tiffError]string{
 // parsing continues with the remaining sub-IFDs.
 func (p *parser) Parse(x *Exif) error {
 	if len(x.Tiff.Dirs) == 0 {
-		return errors.New("Invalid exif data")
+		return errors.New("invalid exif data")
 	}
 	x.LoadTags(x.Tiff.Dirs[0], exifFields, false)
 
@@ -297,7 +296,7 @@ func Decode(r io.Reader) (*Exif, error) {
 	}
 
 	er.Seek(0, 0)
-	raw, err := ioutil.ReadAll(er)
+	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
 	}
@@ -453,14 +452,14 @@ func ratFloat(num, dem int64) float64 {
 // Tries to parse a Geo degrees value from a string as it was found in some
 // EXIF data.
 // Supported formats so far:
-// - "52,00000,50,00000,34,01180" ==> 52 deg 50'34.0118"
-//   Probably due to locale the comma is used as decimal mark as well as the
-//   separator of three floats (degrees, minutes, seconds)
-//   http://en.wikipedia.org/wiki/Decimal_mark#Hindu.E2.80.93Arabic_numeral_system
-// - "52.0,50.0,34.01180" ==> 52deg50'34.0118"
-// - "52,50,34.01180"     ==> 52deg50'34.0118"
+//   - "52,00000,50,00000,34,01180" ==> 52 deg 50'34.0118"
+//     Probably due to locale the comma is used as decimal mark as well as the
+//     separator of three floats (degrees, minutes, seconds)
+//     http://en.wikipedia.org/wiki/Decimal_mark#Hindu.E2.80.93Arabic_numeral_system
+//   - "52.0,50.0,34.01180" ==> 52deg50'34.0118"
+//   - "52,50,34.01180"     ==> 52deg50'34.0118"
 func parseTagDegreesString(s string) (float64, error) {
-	const unparsableErrorFmt = "Unknown coordinate format: %s"
+	const unparsableErrorFmt = "unknown coordinate format: %s"
 	isSplitRune := func(c rune) bool {
 		return c == ',' || c == ';'
 	}
@@ -539,7 +538,7 @@ func tagDegrees(tag *tiff.Tag) (float64, error) {
 		return parseTagDegreesString(s)
 	default:
 		// don't know how to parse value, give up
-		return 0.0, fmt.Errorf("Malformed EXIF Tag Degrees")
+		return 0.0, fmt.Errorf("malformed EXIF Tag Degrees")
 	}
 }
 
@@ -564,22 +563,22 @@ func (x *Exif) LatLong() (lat, long float64, err error) {
 		return
 	}
 	if long, err = tagDegrees(longTag); err != nil {
-		return 0, 0, fmt.Errorf("Cannot parse longitude: %v", err)
+		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
 	}
 	if lat, err = tagDegrees(latTag); err != nil {
-		return 0, 0, fmt.Errorf("Cannot parse latitude: %v", err)
+		return 0, 0, fmt.Errorf("cannot parse latitude: %v", err)
 	}
 	ew, err := ewTag.StringVal()
 	if err == nil && ew == "W" {
 		long *= -1.0
 	} else if err != nil {
-		return 0, 0, fmt.Errorf("Cannot parse longitude: %v", err)
+		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
 	}
 	ns, err := nsTag.StringVal()
 	if err == nil && ns == "S" {
 		lat *= -1.0
 	} else if err != nil {
-		return 0, 0, fmt.Errorf("Cannot parse longitude: %v", err)
+		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
 	}
 	return lat, long, nil
 }
@@ -673,11 +672,6 @@ func newAppSec(marker byte, r io.Reader) (*appSec, error) {
 	return app, nil
 }
 
-// reader returns a reader on this appSec.
-func (app *appSec) reader() *bytes.Reader {
-	return bytes.NewReader(app.data)
-}
-
 // exifReader returns a reader on this appSec with the read cursor advanced to
 // the start of the exif's tiff encoded portion.
 func (app *appSec) exifReader() (*bytes.Reader, error) {
@@ -708,7 +702,7 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 		}
 	}()
 	r2 := io.LimitReader(r, int64(ExifLengthCutoff))
-	data, _ := ioutil.ReadAll(r2)
+	data, _ := io.ReadAll(r2)
 
 	foundAt := -1
 	for i := 0; i < len(data); i++ {
@@ -725,7 +719,7 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 	tif, err := tiff.Decode(er)
 
 	er.Seek(0, 0)
-	raw, err := ioutil.ReadAll(er)
+	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
 	}
@@ -756,22 +750,22 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 // from the DecodeWithParseHeader method.
 // Good reference:
 //
-//      CIPA DC-008-2016; JEITA CP-3451D
-//      -> http://www.cipa.jp/std/documents/e/DC-008-Translation-2016-E.pdf
+//	CIPA DC-008-2016; JEITA CP-3451D
+//	-> http://www.cipa.jp/std/documents/e/DC-008-Translation-2016-E.pdf
 func parseExifHeader(data []byte) error {
 	if len(data) < 2 {
-		return fmt.Errorf("Not enough data for EXIF header (1): (%d)", len(data))
+		return fmt.Errorf("not enough data for EXIF header (1): (%d)", len(data))
 	}
 
 	byteOrderBytes := [2]byte{data[0], data[1]}
 
 	byteOrder, found := byteOrderLookup[byteOrderBytes]
-	if found == false {
+	if !found {
 		return fmt.Errorf("EXIF byte-order not recognized: [%v]", byteOrderBytes)
 	}
 
 	if len(data) < 4 {
-		return fmt.Errorf("Not enough data for EXIF header (2): (%d)", len(data))
+		return fmt.Errorf("not enough data for EXIF header (2): (%d)", len(data))
 	}
 
 	fixedBytes := [2]byte{data[2], data[3]}
@@ -781,7 +775,7 @@ func parseExifHeader(data []byte) error {
 	}
 
 	if len(data) < 2 {
-		return fmt.Errorf("Not enough data for EXIF header (3): (%d)", len(data))
+		return fmt.Errorf("not enough data for EXIF header (3): (%d)", len(data))
 	}
 
 	return nil

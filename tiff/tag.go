@@ -447,9 +447,9 @@ func (t *Tag) String() string {
 	}
 
 	if t.Count == 1 {
-		return strings.Trim(fmt.Sprintf("%s", data), "[]")
+		return strings.Trim(string(data), "[]")
 	}
-	return fmt.Sprintf("%s", data)
+	return string(data)
 }
 
 // MarshalJSON - Marhsal the Tag in JSON format

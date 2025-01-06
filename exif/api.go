@@ -201,12 +201,12 @@ func (x *Exif) GPSAltitude() (float32, error) {
 
 	ref, err := altRef.Int(0)
 	if err != nil {
-		return 0, fmt.Errorf("Cannot parse GPS Altitude: %v", err)
+		return 0, fmt.Errorf("cannot parse GPS Altitude: %v", err)
 	}
 
 	aN, aD, err := alt.Rat2(0)
 	if err != nil {
-		return 0, fmt.Errorf("Cannot parse GPS Altitude: %v", err)
+		return 0, fmt.Errorf("cannot parse GPS Altitude: %v", err)
 	}
 
 	a := float32(aN / aD)
@@ -216,7 +216,7 @@ func (x *Exif) GPSAltitude() (float32, error) {
 	return a, nil
 }
 
-func calcTimeHelper(n int64, d int64, err error) string {
+func calcTimeHelper(n int64, d int64, _ error) string {
 	a := int(n / d)
 	if a > 10 {
 		return strconv.Itoa(a)
@@ -261,7 +261,7 @@ func (x *Exif) GPSTimeStamp() (time.Time, error) {
 func (x *Exif) FocalLength(fn FieldName) (fl float32, err error) {
 	tag, err := x.Get(fn)
 	if err != nil {
-		err = fmt.Errorf("Cannot parse Focal Length: %v", err)
+		err = fmt.Errorf("cannot parse Focal Length: %v", err)
 		return
 	}
 
@@ -298,5 +298,5 @@ func (x *Exif) FocalLength(fn FieldName) (fl float32, err error) {
 		}
 
 	}
-	return 0, fmt.Errorf("Cannot parse FocalLength")
+	return 0, fmt.Errorf("cannot parse FocalLength")
 }
