@@ -106,7 +106,7 @@ func (w *walker) Walk(field FieldName, tag *tiff.Tag) error {
 		return nil
 	}
 
-	exp, ok := pic[field]
+	exp, ok := pic[string(field)]
 	if !ok {
 		w.t.Errorf("   regression data does not have field %v", field)
 		return nil

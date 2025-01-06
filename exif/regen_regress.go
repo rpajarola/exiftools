@@ -14,6 +14,7 @@ import (
 
 	"github.com/rpajarola/exiftools/exif"
 	"github.com/rpajarola/exiftools/tiff"
+	_ "github.com/rpajarola/exiftools/mknote"
 )
 
 func main() {
