@@ -4,9 +4,9 @@ package xmp
 import (
 	"io"
 
-	"trimmer.io/go-xmp/models/dc"
-	xmpbase "trimmer.io/go-xmp/models/xmp_base"
-	"trimmer.io/go-xmp/xmp"
+	"github.com/trimmer-io/go-xmp/models/dc"
+	xmpbase "github.com/trimmer-io/go-xmp/models/xmp_base"
+	"github.com/trimmer-io/go-xmp/xmp"
 )
 
 // ReadXMPDocument - Read from file to XMP Document
