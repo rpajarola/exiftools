@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/rpajarola/exiftools/exif"
 	_ "github.com/rpajarola/exiftools/mknote"
@@ -52,7 +51,7 @@ func makeExpected(files []string, w io.Writer) {
 	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n")
 
 	for _, name := range files {
-		if !strings.HasSuffix(name, ".jpg") {
+		if filepath.Ext(name) != ".jpg" {
 			continue
 		}
 
