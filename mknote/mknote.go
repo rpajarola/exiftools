@@ -11,7 +11,7 @@ import (
 
 var (
 	// All is a list of all available makernote parsers
-	All = []exif.Parser{Canon, NikonV3, AdobeDNG, Sony}
+	All = []exif.Parser{Apple, Canon, NikonV3, AdobeDNG, Sony}
 )
 
 func init() {
