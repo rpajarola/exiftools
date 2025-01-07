@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-        exif.RegisterParsers(All...)
+	exif.RegisterParsers(All...)
 }
 
 func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr exif.FieldName, fieldMap map[uint16]exif.FieldName) error {

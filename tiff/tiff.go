@@ -5,6 +5,7 @@ package tiff
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -48,7 +49,7 @@ func Decode(r io.Reader) (*Tiff, error) {
 	} else if string(bo) == "MM" {
 		t.Order = binary.BigEndian
 	} else {
-		return nil, errors.New("tiff: could not read tiff byte order")
+		return nil, errors.New(fmt.Sprintf("tiff: invalid tiff byte order %v", hex.EncodeToString(bo)))
 	}
 
 	// check for special tiff marker
