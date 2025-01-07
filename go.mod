@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
-	trimmer.io/go-xmp v0.0.0-20200923092433-f9b6ca6c4a87
+	github.com/trimmer-io/go-xmp v1.0.0
 )
 
 require (
