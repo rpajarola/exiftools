@@ -29,20 +29,20 @@ var (
 	// TODO: fix regression test
 	// This breaks regression test due to string literal in generated code
 	// NikonISOInfo        exif.FieldName = "Nikon.ISOInfo"        // A sub-IFD
-	NikonAFInfo         exif.FieldName = "Nikon.AFInfo"         // A sub-IFD
-	NikonColorBalance   exif.FieldName = "Nikon.ColorBalance"   // A sub-IFD
-	NikonLensData       exif.FieldName = "Nikon.LensData"       // A sub-IFD
-	NikonSerialNO       exif.FieldName = "Nikon.SerialNO"       // usually starts with "NO="
-	NikonFlashInfo      exif.FieldName = "Nikon.FlashInfo"      // A sub-IFD
-	NikonMultiExposure  exif.FieldName = "Nikon.MultiExposure"  // A sub-IFD
-	NikonAFInfo2        exif.FieldName = "Nikon.AFInfo2"        // A sub-IFD
-	NikonFileInfo       exif.FieldName = "Nikon.FileInfo"       // A sub-IFD
-	NikonAFTune         exif.FieldName = "Nikon.AFTune"         // A sub-IFD
-	NikonPreviewPtr     exif.FieldName = "Nikon.PreviewSubIFD"  // A sub-IFD
-	Nikon3_0x000a       exif.FieldName = "Nikon3.0x000a"
-	Nikon3_0x009b       exif.FieldName = "Nikon3.0x009b"
-	Nikon3_0x009f       exif.FieldName = "Nikon3.0x009f"
-	Nikon3_0x00a3       exif.FieldName = "Nikon3.0x00a3"
+	NikonAFInfo        exif.FieldName = "Nikon.AFInfo"        // A sub-IFD
+	NikonColorBalance  exif.FieldName = "Nikon.ColorBalance"  // A sub-IFD
+	NikonLensData      exif.FieldName = "Nikon.LensData"      // A sub-IFD
+	NikonSerialNO      exif.FieldName = "Nikon.SerialNO"      // usually starts with "NO="
+	NikonFlashInfo     exif.FieldName = "Nikon.FlashInfo"     // A sub-IFD
+	NikonMultiExposure exif.FieldName = "Nikon.MultiExposure" // A sub-IFD
+	NikonAFInfo2       exif.FieldName = "Nikon.AFInfo2"       // A sub-IFD
+	NikonFileInfo      exif.FieldName = "Nikon.FileInfo"      // A sub-IFD
+	NikonAFTune        exif.FieldName = "Nikon.AFTune"        // A sub-IFD
+	NikonPreviewPtr    exif.FieldName = "Nikon.PreviewSubIFD" // A sub-IFD
+	Nikon3_0x000a      exif.FieldName = "Nikon3.0x000a"
+	Nikon3_0x009b      exif.FieldName = "Nikon3.0x009b"
+	Nikon3_0x009f      exif.FieldName = "Nikon3.0x009f"
+	Nikon3_0x00a3      exif.FieldName = "Nikon3.0x00a3"
 )
 
 // Nikon version 3 Maker Notes fields (used by E5400, SQ, D2H, D70, and newer)
