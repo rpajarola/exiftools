@@ -132,7 +132,7 @@ func (_ *apple) Parse(x *exif.Exif) error {
 	if err != nil {
 		return nil
 	}
-	if len(m.Val) < 6 {
+	if len(m.Val) < 12 {
 		return nil
 	}
 	if bytes.Compare(m.Val[:12], []byte("Apple iOS\000\000\001")) != 0 {
