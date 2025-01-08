@@ -214,7 +214,7 @@ func (_ *sony) Parse(x *exif.Exif) error {
 	if err != nil {
 		return nil
 	}
-	x.LoadTags(mkNotesDir, makerNoteSonyFields, true)
+	x.LoadTags(mkNotesDir, makerNoteSonyFields, false)
 
 	m9050Dir := &tiff.Dir{}
 
