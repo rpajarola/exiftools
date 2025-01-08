@@ -175,7 +175,11 @@ func DecodeTag(r ReadAtReader, order binary.ByteOrder) (*Tag, error) {
 		if err != nil {
 			return t, errors.New("tiff: tag value read failed: " + err.Error())
 		} else if n != int64(valLen) {
-			return t, ErrShortReadTagValue
+			// TODO: handle values pointing outside of the current
+			// block (when using absolute offsets).
+			// This is common for thumbnails and other large blobs.
+			// return t, fmt.Errorf("%w: offset=%v len=%v", ErrShortReadTagValue, t.ValOffset, valLen)
+			return t, nil
 		}
 		t.Val = buff.Bytes()
 
