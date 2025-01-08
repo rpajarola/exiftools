@@ -22,7 +22,6 @@ var (
 	SonyShutterCount3         exif.FieldName = "Sony.ShutterCount3"
 	SonyInternalSerialNumber  exif.FieldName = "Sony.InternalSerialNumber"
 	SonyInternalSerialNumber2 exif.FieldName = "Sony.InternalSerialNumber2"
-	SonyInternalSerialNumber3 exif.FieldName = "Sony.InternalSerialNumber3"
 
 	// only used internally
 	sony0x9050 exif.FieldName = "Sony.0x9050"
@@ -178,7 +177,7 @@ var Sony0x9050BinaryTags = []SonyBinaryTag{
 	},
 	{
 		// Tag9050b and Tag9050c
-		fieldName: SonyInternalSerialNumber3,
+		fieldName: SonyInternalSerialNumber,
 		offset:    0x88,
 		dataType:  SonyHexString,
 		length:    6,
