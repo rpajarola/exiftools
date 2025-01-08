@@ -197,7 +197,7 @@ func (_ *sony) Parse(x *exif.Exif) error {
 		return nil
 	}
 	mk, err := m.StringVal()
-	if mk != "SONY" {
+	if mk != "SONY" && mk != "HASSELBLAD"{
 		return nil
 	}
 	m, err = x.Get(exif.MakerNote)
@@ -205,10 +205,22 @@ func (_ *sony) Parse(x *exif.Exif) error {
 		return nil
 	}
 
+	if len(m.Val) < 13 {
+                return nil
+        }
+	var offset int64 = 0
+        if bytes.Compare(m.Val[:10], []byte("SONY DSC \000")) == 0 ||
+	   bytes.Compare(m.Val[:10], []byte("SONY CAM \000")) == 0 ||
+	   bytes.Compare(m.Val[:13], []byte("SONY MOBILE \000")) == 0 || // how is this possible?
+	   bytes.Compare(m.Val[:11], []byte("\000\000SONY PIC\000")) == 0 ||
+	   bytes.Compare(m.Val[:10], []byte("VHAB     \000")) == 0 {
+	   offset = 12
+	}
+
 	// Sony maker notes are a single IFD directory with no header.
 	// Reader offsets need to be w.r.t. the original tiff structure.
 	buf := bytes.NewReader(append(make([]byte, m.ValOffset), m.Val...))
-	buf.Seek(int64(m.ValOffset), 0)
+	buf.Seek(int64(m.ValOffset)+offset, 0)
 	mkNotesDir, _, err := tiff.DecodeDir(buf, x.Tiff.Order)
 
 	if err != nil {
@@ -281,15 +293,21 @@ func sonyEncode(bt *SonyBinaryTag, buf []byte) ([]byte, tiff.DataType) {
 	case SonyUint24:
 		val = make([]byte, 4)
 		dt = tiff.DTLong
-		val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], 0}
+		if len(buf) >= bt.offset + 3 {
+			val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], 0}
+		}
 	case SonyUint32:
 		val = make([]byte, 4)
 		dt = tiff.DTLong
-		val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], buf[bt.offset+3]}
+		if len(buf) >= bt.offset + 4 {
+			val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], buf[bt.offset+3]}
+		}
 	case SonyHexString:
 		val = make([]byte, hex.EncodedLen(bt.length)+1)
 		dt = tiff.DTAscii
-		hex.Encode(val, buf[bt.offset:bt.offset+bt.length])
+		if len(buf) >= bt.offset +bt.length {
+			hex.Encode(val, buf[bt.offset:bt.offset+bt.length])
+		}
 	}
 	return val, dt
 }
