@@ -5,7 +5,7 @@ type FieldName string
 
 // UnknownPrefix is used as the first part of field names for decoded tags for
 // which there is no known/supported EXIF field.
-const UnknownPrefix = "UnknownTag_"
+var UnknownPrefix = "UnknownTag_"
 
 // Primary EXIF fields
 const (
