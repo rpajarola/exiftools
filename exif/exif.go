@@ -27,6 +27,8 @@ var (
 	ErrExifHeaderError = errors.New("exif header error")
 )
 
+var KeepUnknownTags = false
+
 const (
 	jpegAPP1 = 0xE1
 
@@ -156,11 +158,11 @@ func (p *parser) Parse(x *Exif) error {
 	if len(x.Tiff.Dirs) == 0 {
 		return errors.New("invalid exif data")
 	}
-	x.LoadTags(x.Tiff.Dirs[0], exifFields, false)
+	x.LoadTags(x.Tiff.Dirs[0], exifFields, KeepUnknownTags)
 
 	// thumbnails
 	if len(x.Tiff.Dirs) >= 2 {
-		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, false)
+		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, KeepUnknownTags)
 	}
 
 	te := make(tiffErrors)
@@ -201,7 +203,7 @@ func loadSubDir(x *Exif, ptr FieldName, fieldMap map[uint16]FieldName) error {
 	if err != nil {
 		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
 	}
-	x.LoadTags(subDir, fieldMap, false)
+	x.LoadTags(subDir, fieldMap, KeepUnknownTags)
 	return nil
 }
 

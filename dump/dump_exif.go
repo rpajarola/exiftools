@@ -22,6 +22,7 @@ func main() {
 		return
 	}
 	defer f.Close()
+	exif.KeepUnknownTags = true
 	x, err := exif.Decode(f)
 	if err != nil {
 		fmt.Printf("exif.Decode(%v): %v\n", fname, err)
