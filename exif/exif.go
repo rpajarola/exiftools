@@ -708,7 +708,7 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 
 	foundAt := -1
 	for i := 0; i < len(data); i++ {
-		if err = parseExifHeader(data[i:]); err == nil {
+		if err = checkExifHeader(data[i:]); err == nil {
 			foundAt = i
 			break
 		}
@@ -747,51 +747,34 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 	return x, nil
 }
 
-// parseExifHeader is based on https://github.com/dsoprea/go-exif package.
-// It traverses the data object until it finds an Exif Header. This is called
-// from the DecodeWithParseHeader method.
-// Good reference:
-//
-//	CIPA DC-008-2016; JEITA CP-3451D
-//	-> http://www.cipa.jp/std/documents/e/DC-008-Translation-2016-E.pdf
-func parseExifHeader(data []byte) error {
-	if len(data) < 2 {
-		return fmt.Errorf("not enough data for EXIF header (1): (%d)", len(data))
+// CIPA DC-008-2024 (Exif Version 3.0)
+// -> https://www.cipa.jp/std/documents/download_e.html?CIPA_DC-008-2024-E
+// Fig 6 p 30: Basic Structure of Uncompressed Data Files
+// Table 1 p 31: TIFF Headers
+func checkExifHeader(data []byte) error {
+	if len(data) < 8 {
+		return fmt.Errorf("Invalid EXIF header: too short (length=%d)", len(data))
 	}
-
-	byteOrderBytes := [2]byte{data[0], data[1]}
-
-	byteOrder, found := byteOrderLookup[byteOrderBytes]
-	if !found {
-		return fmt.Errorf("EXIF byte-order not recognized: [%v]", byteOrderBytes)
+	var order binary.ByteOrder = binary.NativeEndian
+	var byteorder, fortytwo uint16
+	off, err := binary.Decode(data, order, &byteorder)
+	if err != nil {
+		return fmt.Errorf("Invalid EXIF header: %w", err)
 	}
-
-	if len(data) < 4 {
-		return fmt.Errorf("not enough data for EXIF header (2): (%d)", len(data))
+	switch byteorder {
+	case 0x4949: // MM aka Motorola
+		order = binary.BigEndian
+	case 0x4d4d: // II aka Intel
+		order = binary.LittleEndian
+	default:
+		return fmt.Errorf("Invalid EXIF header: unrecognized byte order %04x", byteorder)
 	}
-
-	fixedBytes := [2]byte{data[2], data[3]}
-	expectedFixedBytes := exifFixedBytesLookup[byteOrder]
-	if fixedBytes != expectedFixedBytes {
-		return fmt.Errorf("EXIF header fixed-bytes should be [%v] but are: [%v]", expectedFixedBytes, fixedBytes)
+	_, err = binary.Decode(data[off:], order, &fortytwo)
+	if err != nil {
+		return fmt.Errorf("Invalid EXIF header: %w", err)
 	}
-
-	if len(data) < 2 {
-		return fmt.Errorf("not enough data for EXIF header (3): (%d)", len(data))
+	if fortytwo != 42 {
+		return fmt.Errorf("Invalid EXIF header: got %v, want 42", fortytwo)
 	}
-
 	return nil
 }
-
-var (
-	exifFixedBytesLookup = map[binary.ByteOrder][2]byte{
-		binary.LittleEndian: {0x2a, 0x00},
-		binary.BigEndian:    {0x00, 0x2a},
-	}
-	byteOrderLookup = map[[2]byte]binary.ByteOrder{
-		bigEndianBoBytes:    binary.BigEndian,
-		littleEndianBoBytes: binary.LittleEndian,
-	}
-	bigEndianBoBytes    = [2]byte{'M', 'M'}
-	littleEndianBoBytes = [2]byte{'I', 'I'}
-)
