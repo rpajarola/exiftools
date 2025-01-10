@@ -15,6 +15,9 @@ var Sony = &sony{}
 
 type sony struct{}
 
+// descrambling lookup table for Sony 0x9050 tag
+var sony9050tbl = makeSony9050tbl()
+
 // Sony specific fields
 var (
 	SonyShutterCount          exif.FieldName = "Sony.ShutterCount"
@@ -253,21 +256,25 @@ func (*sony) Parse(x *exif.Exif) error {
 	return nil
 }
 
-func descramble0x9050(val []byte) {
-	// sony0x9050 is a scrambled binary data structure with data in fixed offsets
-	// Create unscrambling table: scrambled = (d*d*d) % 249
-	// values >=249 are stored as is
-	tbl := make([]int, 256)
+// sony0x9050 is a scrambled binary data structure with data in fixed offsets
+// Create unscrambling table: scrambled = (d*d*d) % 249
+// values >=249 are stored as is
+func makeSony9050tbl() []byte {
+	tbl := make([]byte, 256)
 	for i := range tbl {
 		if i < 249 {
-			tbl[i*i*i%249] = i
+			tbl[i*i*i%249] = byte(i)
 		} else {
-			tbl[i] = i
+			tbl[i] = byte(i)
 		}
 	}
+	return tbl
+}
+
+func descramble0x9050(val []byte) {
 	// Descramble
 	for i, v := range val {
-		val[i] = byte(tbl[v])
+		val[i] = byte(sony9050tbl[v])
 	}
 }
 
