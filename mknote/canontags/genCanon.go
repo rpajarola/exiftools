@@ -66,14 +66,14 @@ func writeCanonLensType(data *string, lens map[int][]string) {
 		for i := range lens[key] {
 			lens[key][i] = "\"" + lens[key][i] + "\""
 		}
-		*data += fmt.Sprintf("\t%v: \tCanonLensType{%v},\n", key, strings.Join(lens[key], ","))
+		*data += fmt.Sprintf("\t%v: \t{%v},\n", key, strings.Join(lens[key], ","))
 	}
 	*data += fmt.Sprintln("}\n")
 }
 
 func writeCanonModelIDs(data *string, model map[string][]string) {
 	*data += fmt.Sprintln("// Canon ModelID Values")
-	*data += fmt.Sprintln("var canonModelIDValues = map[uint32]models.CameraModel{")
+	*data += fmt.Sprintln("var canonModelIDValues = map[uint32]{")
 	for _, key := range slices.Sorted(maps.Keys(model)) {
 		*data += fmt.Sprintf("\t%s: \tmodels.CameraModel(\"%s\"),\n", key, model[key][0])
 	}
