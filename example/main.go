@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"flag"
 	"os"
 	"time"
 
@@ -13,15 +14,15 @@ import (
 	"github.com/rpajarola/exiftools/exif"
 	"github.com/rpajarola/exiftools/mknote"
 	"github.com/rpajarola/exiftools/xmp"
-	//"github.com/rpajarola/filetype"
 )
 
 func main() {
-	fname := "../../test/img/b1.CR2" //.jpg"
+        flag.Parse()
+        fname := flag.Arg(0)
 
 	f, err := os.Open(fname)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("open %v: %v", fname, err)
 	}
 	defer f.Close()
 
