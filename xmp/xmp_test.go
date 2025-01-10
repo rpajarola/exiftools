@@ -10,8 +10,8 @@ import (
 	"github.com/rpajarola/exiftools/xmp"
 )
 
-const JPEGTestFile = "../exif/samples/test.jpg"
-const XMPTestFile = "../exif/samples/test.xmp"
+const JPEGTestFile = "../exif/testdata/test.jpg"
+const XMPTestFile = "../exif/testdata/test.xmp"
 
 // TestReadXMPDocument - Test needs improvement
 func TestReadXMPDocument(t *testing.T) {
