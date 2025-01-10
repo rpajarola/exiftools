@@ -218,11 +218,11 @@ func (*sony) Parse(x *exif.Exif) error {
 		return nil
 	}
 	var offset int64 = 0
-	if !bytes.Equal(m.Val[:10], []byte("SONY DSC \000")) ||
-		!bytes.Equal(m.Val[:10], []byte("SONY CAM \000")) ||
-		!bytes.Equal(m.Val[:13], []byte("SONY MOBILE \000")) || // how is this possible?
-		!bytes.Equal(m.Val[:11], []byte("\000\000SONY PIC\000")) ||
-		!bytes.Equal(m.Val[:10], []byte("VHAB     \000")) {
+	if bytes.Equal(m.Val[:10], []byte("SONY DSC \000")) ||
+		bytes.Equal(m.Val[:10], []byte("SONY CAM \000")) ||
+		bytes.Equal(m.Val[:13], []byte("SONY MOBILE \000")) || // how is this possible?
+		bytes.Equal(m.Val[:11], []byte("\000\000SONY PIC\000")) ||
+		bytes.Equal(m.Val[:10], []byte("VHAB     \000")) {
 		offset = 12
 	}
 
