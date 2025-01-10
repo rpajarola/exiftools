@@ -77,7 +77,7 @@ func writeCanonModelIDs(data *string, model map[string][]string) {
 	*data += fmt.Sprintln("// Canon ModelID Values")
 	*data += fmt.Sprintln("var canonModelIDValues = map[uint32]models.CameraModel{")
 	for _, key := range slices.Sorted(maps.Keys(model)) {
-		*data += fmt.Sprintf("\t%s: \tmodels.CameraModel{\"%s\"},\n", key, model[key][0])
+		*data += fmt.Sprintf("\t%s: \t{\"%s\"},\n", key, model[key][0])
 	}
 	*data += fmt.Sprintln("}\n")
 }
