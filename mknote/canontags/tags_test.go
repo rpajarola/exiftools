@@ -8,26 +8,19 @@ import (
 
 // Test CanonModelID Values
 func TestCanonModel(t *testing.T) {
-	t.Log(canontags.CanonModel(0x805))
-	_, err := canontags.CanonModel(0x809)
+	_, err := canontags.CanonModel(0x805)
 	if err != nil {
-		t.Fatalf("Could not find CanonModelID: %v", err)
+		t.Fatalf("Could not find CanonModelID %v: %v", 0x805, err)
 	}
 
 }
 
 // Test CanonLensType Values
 func TestCanonLens(t *testing.T) {
-	lens1, err := canontags.CanonLens(138)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-	if lens1[0] != "Canon EF 28-80mm f/2.8-4L" {
+	lens1 := canontags.CanonLens(138)
+	if lens1 != "Canon EF 28-80mm f/2.8-4L" {
 		t.Fatalf("Test Failed: Lens %v not found", lens1[0])
 	}
-	lens2, err := canontags.CanonLens(1)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	lens2 := canontags.CanonLens(1)
 	t.Log(lens2)
 }
