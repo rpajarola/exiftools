@@ -1,4 +1,6 @@
+//go:build ignore
 // +build ignore
+
 // This program generates canonAutoTags.go. It can be invoked by running
 // go generate
 
@@ -6,9 +8,12 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"maps"
 	"net/http"
+	"os"
 	"regexp"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -33,7 +38,7 @@ func FetchCanonTags() {
 
 func main() {
 	start := time.Now()
-	dat, err := ioutil.ReadFile("Canon.pm")
+	dat, err := os.ReadFile("Canon.pm")
 	if err != nil {
 		panic(err)
 	}
@@ -49,20 +54,19 @@ func main() {
 
 	writeCanonLensType(&out, lens)
 	writeCanonModelIDs(&out, models)
-	ioutil.WriteFile(fileName, []byte(out), 0644)
+	os.WriteFile(fileName, []byte(out), 0644)
 	fmt.Printf("Generated sucessfully: %s\n", fileName)
-	//fmt.Print(string(dat))
 }
 
-func writeCanonLensType(data *string, lens map[string][]string) {
+func writeCanonLensType(data *string, lens map[int][]string) {
 	*data += fmt.Sprintln("// CanonLensType Values")
 	*data += fmt.Sprintln("var canonLensTypeValues = map[int]CanonLensType{")
-	for key, val := range lens {
-		*data += fmt.Sprintf("\t%s: \tCanonLensType{", key)
-		for _, item := range val {
-			*data += fmt.Sprintf("\"%s\",", item)
+	for _, key := range slices.Sorted(maps.Keys(lens)) {
+		//slices.Sort(lens[key])
+		for i := range lens[key] {
+			lens[key][i] = "\"" + lens[key][i] + "\""
 		}
-		*data += fmt.Sprintf("},\n")
+		*data += fmt.Sprintf("\t%v: \tCanonLensType{%v},\n", key, strings.Join(lens[key], ","))
 	}
 	*data += fmt.Sprintln("}\n")
 }
@@ -70,8 +74,8 @@ func writeCanonLensType(data *string, lens map[string][]string) {
 func writeCanonModelIDs(data *string, model map[string][]string) {
 	*data += fmt.Sprintln("// Canon ModelID Values")
 	*data += fmt.Sprintln("var canonModelIDValues = map[uint32]models.CameraModel{")
-	for key, val := range model {
-		*data += fmt.Sprintf("\t%s: \tmodels.CameraModel(\"%s\"),\n", key, val[0])
+	for _, key := range slices.Sorted(maps.Keys(model)) {
+		*data += fmt.Sprintf("\t%s: \tmodels.CameraModel(\"%s\"),\n", key, model[key][0])
 	}
 	*data += fmt.Sprintln("}\n")
 }
@@ -87,20 +91,20 @@ func extractPerlVariable(data string, key string) string {
 	return b[0]
 }
 
-func ExtractCanonLensTypes(data string) map[string][]string {
+func ExtractCanonLensTypes(data string) map[int][]string {
 	i := extractPerlVariable(data, "canonLensTypes")
 	// Separate each item
 	zp := regexp.MustCompile(`\n([\s]+)(([0-9]+)|(-[0-9]))`)
 	item := zp.FindAllString(i, -1)
 	res := zp.Split(i, -1)
-	list := make(map[string][]string)
+	list := make(map[int][]string)
 	// Remove Comments
 	commentRE := regexp.MustCompile(`\#`)
 	qre := regexp.MustCompile(`\'([A-Za-z0-9\/\-\.\s\+\\[\])\(\|]+)\'`)
 	sum := 0
 	for i := 0; i < len(item); i++ {
 		// Key
-		key := spaceStringsBuilder(item[i])
+		key, _ := strconv.Atoi(spaceStringsBuilder(item[i]))
 		// Remove comments
 		str := commentRE.Split(res[i+1], -1)
 		value := qre.FindString(str[0])
