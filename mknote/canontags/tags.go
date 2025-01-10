@@ -16,9 +16,9 @@ const (
 
 var (
 	UnknownCameraLensType = CanonLensType([]string{"Unknown"})
-	ErrModelNotFound      = errors.New("Model Not Found")
-	ErrLensTypeNotFound   = errors.New("Lens type Not Found")
-	ErrMakerNote          = errors.New("Error reading MakerNote")
+	ErrModelNotFound      = errors.New("model Not Found")
+	ErrLensTypeNotFound   = errors.New("lens type Not Found")
+	ErrMakerNote          = errors.New("error reading MakerNote")
 )
 
 // CanonAFInfo - Work In Progress
