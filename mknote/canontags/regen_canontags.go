@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"os"
@@ -24,21 +25,31 @@ import (
 
 const (
 	fileName = "canontags-generated.go"
+	pmFile   = "Canon.pm"
 	canonURL = "https://raw.githubusercontent.com/exiftool/exiftool/master/lib/Image/ExifTool/Canon.pm"
 )
 
 func FetchCanonTags() {
 	resp, err := http.Get(canonURL)
 	if err != nil {
-		fmt.Printf("%s", err)
+		panic(err)
 	}
-
+	dat, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	if err = os.WriteFile(pmFile, dat, 0644); err != nil {
+		panic(err)
+	}
 	defer resp.Body.Close()
 }
 
 func main() {
 	start := time.Now()
-	dat, err := os.ReadFile("Canon.pm")
+	if _, err := os.Stat(pmFile); err != nil {
+		FetchCanonTags()
+	}
+	dat, err := os.ReadFile(pmFile)
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +88,7 @@ func writeCanonModelIDs(data *string, model map[string][]string) {
 	*data += fmt.Sprintln("// Canon ModelID Values")
 	*data += fmt.Sprintln("var canonModelIDValues = map[uint32]models.CameraModel{")
 	for _, key := range slices.Sorted(maps.Keys(model)) {
-		*data += fmt.Sprintf("\t%s: \t{\"%s\"},\n", key, model[key][0])
+		*data += fmt.Sprintf("\t%s: \t\"%s\",\n", key, model[key][0])
 	}
 	*data += fmt.Sprintln("}\n")
 }
