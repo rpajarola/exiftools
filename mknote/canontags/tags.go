@@ -8,8 +8,6 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
-//go:generate go run genCanon.go
-
 const (
 	UnknownCameraModel = models.CameraModel("Unknown")
 )
