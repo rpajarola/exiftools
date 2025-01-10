@@ -72,7 +72,7 @@ var SubIFD2Fields = map[uint16]exif.FieldName{
 }
 
 // Parse decodes all Adobe DNG subIFDS found in x and adds it to x.
-func (_ *adobeDNG) Parse(x *exif.Exif) error {
+func (*adobeDNG) Parse(x *exif.Exif) error {
 	m, err := x.Get(exif.SubIfdsPointer)
 	if err != nil {
 		return nil

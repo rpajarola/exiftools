@@ -160,12 +160,6 @@ func (cr *CanonRaw) imageType(x *exif.Exif) error {
 	return err
 }
 
-// FileNumber - File Number
-// WIP
-func (cr *CanonRaw) fileNumber(x *exif.Exif) {
-
-}
-
 func (cr *CanonRaw) canonAFInfo(x *exif.Exif) error {
 	tag, err := x.Get(CanonAFInfo)
 	if err != nil {
@@ -308,7 +302,7 @@ func (cr *CanonRaw) timezone(x *exif.Exif) error {
 }
 
 // Parse decodes all Canon makernote data found in x and adds it to x.
-func (_ *canon) Parse(x *exif.Exif) error {
+func (*canon) Parse(x *exif.Exif) error {
 	m, err := x.Get(exif.MakerNote)
 	if err != nil {
 		return nil

@@ -166,7 +166,7 @@ func (nr *NikonRaw) RawCameraSettings(x *exif.Exif) (CameraSettings, error) {
 var NikonPreviewImageTag = exif.NewPreviewImageTag(NikonPreviewImageStart, NikonPreviewImageLength, NikonPreviewCompression)
 
 // Parse decodes all Nikon makernote data found in x and adds it to x.
-func (_ *nikonV3) Parse(x *exif.Exif) error {
+func (*nikonV3) Parse(x *exif.Exif) error {
 	m, err := x.Get(exif.MakerNote)
 	if err != nil {
 		return nil
@@ -174,7 +174,7 @@ func (_ *nikonV3) Parse(x *exif.Exif) error {
 	if len(m.Val) < 6 {
 		return nil
 	}
-	if bytes.Compare(m.Val[:6], []byte("Nikon\000")) != 0 {
+	if !bytes.Equal(m.Val[:6], []byte("Nikon\000")) {
 		return nil
 	}
 

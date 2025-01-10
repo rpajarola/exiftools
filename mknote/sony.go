@@ -186,18 +186,24 @@ var Sony0x9050BinaryTags = []SonyBinaryTag{
 }
 
 // Parse decodes Sony makernote data found in x and adds it to x.
-func (_ *sony) Parse(x *exif.Exif) error {
+func (*sony) Parse(x *exif.Exif) error {
 	m, err := x.Get(exif.Model)
 	if err != nil {
 		return nil
 	}
 	model, err := m.StringVal()
+	if err != nil {
+		return nil
+	}
 	m, err = x.Get(exif.Make)
 	if err != nil {
 		return nil
 	}
 	mk, err := m.StringVal()
-	if mk != "SONY" && mk != "HASSELBLAD"{
+	if err != nil {
+		return nil
+	}
+	if mk != "SONY" && mk != "HASSELBLAD" {
 		return nil
 	}
 	m, err = x.Get(exif.MakerNote)
@@ -206,15 +212,15 @@ func (_ *sony) Parse(x *exif.Exif) error {
 	}
 
 	if len(m.Val) < 13 {
-                return nil
-        }
+		return nil
+	}
 	var offset int64 = 0
-        if bytes.Compare(m.Val[:10], []byte("SONY DSC \000")) == 0 ||
-	   bytes.Compare(m.Val[:10], []byte("SONY CAM \000")) == 0 ||
-	   bytes.Compare(m.Val[:13], []byte("SONY MOBILE \000")) == 0 || // how is this possible?
-	   bytes.Compare(m.Val[:11], []byte("\000\000SONY PIC\000")) == 0 ||
-	   bytes.Compare(m.Val[:10], []byte("VHAB     \000")) == 0 {
-	   offset = 12
+	if !bytes.Equal(m.Val[:10], []byte("SONY DSC \000")) ||
+		!bytes.Equal(m.Val[:10], []byte("SONY CAM \000")) ||
+		!bytes.Equal(m.Val[:13], []byte("SONY MOBILE \000")) || // how is this possible?
+		!bytes.Equal(m.Val[:11], []byte("\000\000SONY PIC\000")) ||
+		!bytes.Equal(m.Val[:10], []byte("VHAB     \000")) {
+		offset = 12
 	}
 
 	// Sony maker notes are a single IFD directory with no header.
@@ -252,7 +258,7 @@ func descramble0x9050(val []byte) {
 	// Create unscrambling table: scrambled = (d*d*d) % 249
 	// values >=249 are stored as is
 	tbl := make([]int, 256)
-	for i, _ := range tbl {
+	for i := range tbl {
 		if i < 249 {
 			tbl[i*i*i%249] = i
 		} else {
@@ -293,19 +299,19 @@ func sonyEncode(bt *SonyBinaryTag, buf []byte) ([]byte, tiff.DataType) {
 	case SonyUint24:
 		val = make([]byte, 4)
 		dt = tiff.DTLong
-		if len(buf) >= bt.offset + 3 {
+		if len(buf) >= bt.offset+3 {
 			val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], 0}
 		}
 	case SonyUint32:
 		val = make([]byte, 4)
 		dt = tiff.DTLong
-		if len(buf) >= bt.offset + 4 {
+		if len(buf) >= bt.offset+4 {
 			val = []byte{buf[bt.offset], buf[bt.offset+1], buf[bt.offset+2], buf[bt.offset+3]}
 		}
 	case SonyHexString:
 		val = make([]byte, hex.EncodedLen(bt.length)+1)
 		dt = tiff.DTAscii
-		if len(buf) >= bt.offset +bt.length {
+		if len(buf) >= bt.offset+bt.length {
 			hex.Encode(val, buf[bt.offset:bt.offset+bt.length])
 		}
 	}

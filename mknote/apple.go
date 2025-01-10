@@ -127,7 +127,7 @@ var makerNoteAppleFields = map[uint16]exif.FieldName{
 }
 
 // Parse decodes all Apple makernote data found in x and adds it to x.
-func (_ *apple) Parse(x *exif.Exif) error {
+func (*apple) Parse(x *exif.Exif) error {
 	m, err := x.Get(exif.MakerNote)
 	if err != nil {
 		return nil
@@ -135,7 +135,7 @@ func (_ *apple) Parse(x *exif.Exif) error {
 	if len(m.Val) < 12 {
 		return nil
 	}
-	if bytes.Compare(m.Val[:12], []byte("Apple iOS\000\000\001")) != 0 {
+	if !bytes.Equal(m.Val[:12], []byte("Apple iOS\000\000\001")) {
 		return nil
 	}
 
