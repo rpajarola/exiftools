@@ -11,7 +11,11 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 .DS_Store
-example/*.jpg
-example/exif-read-tool
-example/*.json
+
+# downloaded Canon.pm file for generating tags
 mknote/canontags/*.pm
+
+# binaries
+example/example
+dump_exif/dump_exif
+dump_xmp/dump_xmp
