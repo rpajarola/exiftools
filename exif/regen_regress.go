@@ -17,7 +17,7 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
-const testDataDir = "testdata"
+const testDataDir = "../testdata"
 
 func main() {
 	flag.Parse()
