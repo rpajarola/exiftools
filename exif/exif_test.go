@@ -16,20 +16,17 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
-const testDataDir = "testdata"
-
-var dataDir = flag.String("test_data_dir", ".", "Directory where the data files for testing are located")
+var testDataDir = flag.String("test_data_dir", "../testdata", "Directory where the data files for testing are located")
 
 func TestDecode(t *testing.T) {
-	fpath := filepath.Join(*dataDir, testDataDir)
-	f, err := os.Open(fpath)
+	f, err := os.Open(*testDataDir)
 	if err != nil {
-		t.Fatalf("Could not open sample directory '%s': %v", fpath, err)
+		t.Fatalf("Could not open sample directory '%s': %v", *testDataDir, err)
 	}
 
 	names, err := f.Readdirnames(0)
 	if err != nil {
-		t.Fatalf("Could not read sample directory '%s': %v", fpath, err)
+		t.Fatalf("Could not read sample directory '%s': %v", *testDataDir, err)
 	}
 
 	for _, name := range names {
@@ -38,7 +35,7 @@ func TestDecode(t *testing.T) {
 			continue
 		}
 		t.Run(name, func(t *testing.T) {
-			f, err := os.Open(filepath.Join(fpath, name))
+			f, err := os.Open(filepath.Join(*testDataDir, name))
 			if err != nil {
 				t.Errorf("open: %v", err)
 			}
@@ -60,7 +57,7 @@ func TestDecode(t *testing.T) {
 }
 
 func TestDecodeRawEXIF(t *testing.T) {
-	rawFile := filepath.Join(*dataDir, testDataDir, "raw.exif")
+	rawFile := filepath.Join(*testDataDir, "raw.exif")
 	raw, err := os.ReadFile(rawFile)
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +124,7 @@ func (w *walker) Walk(field FieldName, tag *tiff.Tag) error {
 }
 
 func TestMarshal(t *testing.T) {
-	name := filepath.Join(*dataDir, testDataDir, "sample1.jpg")
+	name := filepath.Join(*testDataDir, "sample1.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -185,7 +182,7 @@ func TestParseTagDegreesString(t *testing.T) {
 
 // Make sure we error out early when a tag had a count of MaxUint32
 func TestMaxUint32CountError(t *testing.T) {
-	name := filepath.Join(*dataDir, testDataDir, "corrupt/max_uint32_exif.jpg")
+	name := filepath.Join(*testDataDir, "corrupt/max_uint32_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -203,7 +200,7 @@ func TestMaxUint32CountError(t *testing.T) {
 
 // Make sure we error out early with tag data sizes larger than the image file
 func TestHugeTagError(t *testing.T) {
-	name := filepath.Join(*dataDir, testDataDir, "corrupt/huge_tag_exif.jpg")
+	name := filepath.Join(*testDataDir, "corrupt/huge_tag_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -221,7 +218,7 @@ func TestHugeTagError(t *testing.T) {
 
 // Check for a 0-length tag value
 func TestZeroLengthTagError(t *testing.T) {
-	name := filepath.Join(*dataDir, testDataDir, "corrupt/infinite_loop_exif.jpg")
+	name := filepath.Join(*testDataDir, "corrupt/infinite_loop_exif.jpg")
 	f, err := os.Open(name)
 	if err != nil {
 		t.Fatalf("%v\n", err)
