@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	heif "github.com/jdeng/goheif"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -230,7 +231,7 @@ func Decode(r io.Reader) (*Exif, error) {
 	// If we're parsing a JPEG image, we need to strip away the JPEG APP1
 	// marker and also the EXIF header.
 
-	header := make([]byte, 4)
+	header := make([]byte, 8)
 	n, err := io.ReadFull(r, header)
 	if err != nil {
 		return nil, fmt.Errorf("exif: error reading 4 byte header, got %d, %v", n, err)
@@ -238,8 +239,9 @@ func Decode(r io.Reader) (*Exif, error) {
 
 	var isTiff bool
 	var isRawExif bool
+	var isHeif bool
 	var assumeJPEG bool
-	switch string(header) {
+	switch string(header[0:4]) {
 	case "II*\x00":
 		// TIFF - Little endian (Intel)
 		isTiff = true
@@ -249,8 +251,12 @@ func Decode(r io.Reader) (*Exif, error) {
 	case "Exif":
 		isRawExif = true
 	default:
-		// Not TIFF, assume JPEG
-		assumeJPEG = true
+		if string(header[4:]) == "ftyp" {
+			isHeif = true
+		} else {
+			// Assume JPEG
+			assumeJPEG = true
+		}
 	}
 
 	// Put the header bytes back into the reader.
@@ -262,6 +268,15 @@ func Decode(r io.Reader) (*Exif, error) {
 	)
 
 	switch {
+	case isHeif:
+		data, err := io.ReadAll(r) // TODO: this is wasteful (we need a ReaderAt)
+		if err != nil {
+			return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file")
+		}
+		ra := bytes.NewReader(data)
+		xf, err := heif.ExtractExif(ra)
+		r = bytes.NewReader(xf)
+		fallthrough
 	case isRawExif:
 		var header [6]byte
 		if _, err := io.ReadFull(r, header[:]); err != nil {
