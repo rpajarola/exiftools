@@ -1,10 +1,1 @@
-#!/bin/bash
-
-for oldfile in "${@}"; do
-	echo "${oldfile}"
-        exiftool "${oldfile}" -Model -Make -SerialNumber -ShutterCount
-        read -p "new test file (without .jpg)\n> " newfile
-        cp 1x1#000000.jpg "${newfile}.jpg"
-	exiftool -TagsFromFile "${oldfile}" -all:all "${newfile}.jpg"
-	rm "${newfile}.jpg_original"
-done
+../.git/annex/objects/Qx/38/SHA256E-s329--3437b311dfae88a317bc7c110f3585e42a0e6b5157abc9c2771e4541400adb6d.sh/SHA256E-s329--3437b311dfae88a317bc7c110f3585e42a0e6b5157abc9c2771e4541400adb6d.sh
