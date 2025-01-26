@@ -1,3 +1,13 @@
+# read-only
+
+```
+git pull
+apt install git-annex / brew install git-annex
+./get_testfiles.sh
+```
+
+# read/write access
+
 ```
 git pull
 apt install git-annex / brew install git-annex
@@ -6,7 +16,8 @@ git annex sync
 git annex get *
 ```
 
-to add a file:
+# add a file
+
 ```
 git annex add *
 git commit
