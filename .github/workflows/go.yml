@@ -26,7 +26,7 @@ jobs:
       run: go build -v ./...
 
     - name: Get Testdata
-      run: ./get_testfiles.sh
+      run: bash ${GITHUB_WORKSPACE}/get_testfiles.sh
 
     - name: Test
       run: go test -v ./...
