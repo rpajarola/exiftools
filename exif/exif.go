@@ -417,6 +417,9 @@ func (x *Exif) DateTime(fields ...FieldName) (time.Time, error) {
 			break
 		}
 	}
+	if tag == nil {
+		return dt, errors.New("DateTime not found")
+	}
 	if tag.Format() != tiff.StringVal {
 		return dt, errors.New("DateTime[Original] not in string format")
 	}
