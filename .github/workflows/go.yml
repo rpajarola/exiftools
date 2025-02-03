@@ -25,11 +25,8 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Print working directory
-      run: pwd
-      
-    - name: List files
-      run: ls -al
-     
+    - name: Get Testdata
+      run: ./get_testfiles.sh
+
     - name: Test
       run: go test -v ./...
