@@ -20,6 +20,8 @@ jobs:
 
     - name: Set up git 1
       run: git config --global user.email "testrunner@servium.ch"
+      
+    - name: Set up git 2
       run: git config --global user.name "testrunner"
     
     - name: Set up Go
