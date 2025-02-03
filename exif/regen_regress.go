@@ -51,17 +51,20 @@ func makeExpected(files []string, w io.Writer) {
 	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n")
 
 	for _, name := range files {
-		if filepath.Ext(name) != ".jpg" {
+		if filepath.Ext(name) != ".jpg" && filepath.Ext(name) != ".heic" {
+			fmt.Printf("skipping %v\n", name)
 			continue
 		}
 
 		f, err := os.Open(name)
 		if err != nil {
+			fmt.Printf("open %v: %v\n", name, err)
 			continue
 		}
 
 		x, err := exif.Decode(f)
 		if err != nil {
+			fmt.Printf("decode %v: %v\n", name, err)
 			f.Close()
 			continue
 		}
