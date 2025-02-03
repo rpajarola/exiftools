@@ -18,8 +18,9 @@ jobs:
     - uses: actions/checkout@v4
     - uses: jstritch/setup-git-annex@v1
 
-    - name Set up git
+    - name Set up git 1
       run: git config --global user.email "testrunner@servium.ch"
+    -name Set up git 2
       run: git config --global user.name "testrunner"
     
     - name: Set up Go
