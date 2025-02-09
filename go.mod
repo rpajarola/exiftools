@@ -2,6 +2,8 @@ module github.com/rpajarola/exiftools
 
 go 1.23.4
 
+replace github.com/jdeng/goheif => github.com/rpajarola/goheif v0.0.0-20250202080004-35fd9cb3e7e1
+
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/jdeng/goheif v0.0.0-20241115163857-e2bbb197c985
