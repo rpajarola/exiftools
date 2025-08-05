@@ -122,7 +122,7 @@ func IsExifError(err error) bool {
 // IsGPSError reports whether the error happened while decoding the GPS sub-IFD.
 func IsGPSError(err error) bool {
 	if te, ok := err.(tiffErrors); ok {
-		_, isGPS := te[loadExif]
+		_, isGPS := te[loadGPS]
 		return isGPS
 	}
 	return false
