@@ -598,7 +598,7 @@ func (x *Exif) LatLong() (lat, long float64, err error) {
 	if err == nil && ns == "S" {
 		lat *= -1.0
 	} else if err != nil {
-		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
+		return 0, 0, fmt.Errorf("cannot parse latitude: %v", err)
 	}
 	return lat, long, nil
 }
