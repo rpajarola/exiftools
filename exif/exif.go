@@ -740,7 +740,10 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 		}
 	}()
 	r2 := io.LimitReader(r, int64(ExifLengthCutoff))
-	data, _ := io.ReadAll(r2)
+	data, err := io.ReadAll(r2)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read EXIF data: %w", err)
+	}
 
 	foundAt := -1
 	for i := 0; i < len(data); i++ {
