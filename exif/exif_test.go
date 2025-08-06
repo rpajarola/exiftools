@@ -233,3 +233,72 @@ func TestZeroLengthTagError(t *testing.T) {
 	//	t.Fatal("wrong error:", err.Error())
 	//}
 }
+
+// TestDecodeHEIF tests HEIF/HEIC file EXIF extraction
+func TestDecodeHEIF(t *testing.T) {
+	heifFile := filepath.Join(*testDataDir, "park.heic")
+	f, err := os.Open(heifFile)
+	if err != nil {
+		t.Skipf("HEIF test file not found: %v", err)
+		return
+	}
+	defer f.Close()
+
+	// Test that we can decode HEIF files using DecodeWithParseHeader
+	// (regular Decode() doesn't handle HEIF format detection)
+	x, err := DecodeWithParseHeader(f)
+	if err != nil {
+		t.Fatalf("Failed to decode HEIF file: %v", err)
+	}
+
+	if x == nil {
+		t.Fatal("Decode returned nil exif data for HEIF file")
+	}
+
+	// Test that we can extract some basic EXIF data
+	// Try to get some common fields to verify EXIF data was extracted
+	if make, err := x.Get(Make); err == nil {
+		if makeStr, err := make.StringVal(); err == nil {
+			t.Logf("Camera make: %s", makeStr)
+		}
+	}
+
+	if model, err := x.Get(Model); err == nil {
+		if modelStr, err := model.StringVal(); err == nil {
+			t.Logf("Camera model: %s", modelStr)
+		}
+	}
+
+	if datetime, err := x.Get(DateTime); err == nil {
+		if dtStr, err := datetime.StringVal(); err == nil {
+			t.Logf("DateTime: %s", dtStr)
+		}
+	}
+
+	// Test image dimensions
+	width, height := x.GetImageSize()
+	if width > 0 && height > 0 {
+		t.Logf("Image dimensions: %dx%d", width, height)
+	}
+
+	// Test orientation
+	if orientation, err := x.GetOrientation(); err == nil {
+		t.Logf("Orientation: %v", orientation)
+	}
+
+	// Verify we can walk through all the EXIF tags
+	tagCount := 0
+	err = x.Walk(walkFunc(func(name FieldName, tag *tiff.Tag) error {
+		tagCount++
+		return nil
+	}))
+	if err != nil {
+		t.Errorf("Failed to walk HEIF EXIF tags: %v", err)
+	}
+
+	if tagCount == 0 {
+		t.Error("No EXIF tags found in HEIF file")
+	} else {
+		t.Logf("Found %d EXIF tags in HEIF file", tagCount)
+	}
+}
