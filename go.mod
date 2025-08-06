@@ -6,7 +6,7 @@ replace github.com/jdeng/goheif => github.com/rpajarola/goheif v0.0.0-2025020208
 
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
-	github.com/jdeng/goheif v0.0.0-20241115163857-e2bbb197c985
+	github.com/jdeng/goheif v0.0.0-20250603221700-0b111b5c3adb
 	github.com/trimmer-io/go-xmp v1.0.0
 )
 
