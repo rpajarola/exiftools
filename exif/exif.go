@@ -598,44 +598,64 @@ func tagDegrees(tag *tiff.Tag) (float64, error) {
 	}
 }
 
+// parseGPSCoordinate extracts and parses a GPS coordinate (latitude or longitude)
+// from the given coordinate and reference tags.
+func (x *Exif) parseGPSCoordinate(coordTag, refTag FieldName, coordName string) (float64, error) {
+	// Get the coordinate tag
+	tag, err := x.Get(coordTag)
+	if err != nil {
+		return 0, err
+	}
+	
+	// Get the reference tag (N/S for latitude, E/W for longitude)
+	refTagVal, err := x.Get(refTag)
+	if err != nil {
+		return 0, err
+	}
+	
+	// Parse the degrees value
+	coord, err := tagDegrees(tag)
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse %s: %v", coordName, err)
+	}
+	
+	// Apply the reference direction
+	ref, err := refTagVal.StringVal()
+	if err != nil {
+		return 0, fmt.Errorf("cannot parse %s reference: %v", coordName, err)
+	}
+	
+	// Apply negative sign for South/West
+	if ref == "S" || ref == "W" {
+		coord *= -1.0
+	}
+	
+	return coord, nil
+}
+
+// parseGPSLatitude extracts and parses GPS latitude from EXIF data.
+func (x *Exif) parseGPSLatitude() (float64, error) {
+	return x.parseGPSCoordinate(FieldName("GPSLatitude"), FieldName("GPSLatitudeRef"), "latitude")
+}
+
+// parseGPSLongitude extracts and parses GPS longitude from EXIF data.
+func (x *Exif) parseGPSLongitude() (float64, error) {
+	return x.parseGPSCoordinate(FieldName("GPSLongitude"), FieldName("GPSLongitudeRef"), "longitude")
+}
+
 // LatLong returns the latitude and longitude of the photo and
 // whether it was present.
 func (x *Exif) LatLong() (lat, long float64, err error) {
-	// All calls of x.Get might return an TagNotPresentError
-	longTag, err := x.Get(FieldName("GPSLongitude"))
+	lat, err = x.parseGPSLatitude()
 	if err != nil {
-		return
+		return 0, 0, err
 	}
-	ewTag, err := x.Get(FieldName("GPSLongitudeRef"))
+	
+	long, err = x.parseGPSLongitude()
 	if err != nil {
-		return
+		return 0, 0, err
 	}
-	latTag, err := x.Get(FieldName("GPSLatitude"))
-	if err != nil {
-		return
-	}
-	nsTag, err := x.Get(FieldName("GPSLatitudeRef"))
-	if err != nil {
-		return
-	}
-	if long, err = tagDegrees(longTag); err != nil {
-		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
-	}
-	if lat, err = tagDegrees(latTag); err != nil {
-		return 0, 0, fmt.Errorf("cannot parse latitude: %v", err)
-	}
-	ew, err := ewTag.StringVal()
-	if err == nil && ew == "W" {
-		long *= -1.0
-	} else if err != nil {
-		return 0, 0, fmt.Errorf("cannot parse longitude: %v", err)
-	}
-	ns, err := nsTag.StringVal()
-	if err == nil && ns == "S" {
-		lat *= -1.0
-	} else if err != nil {
-		return 0, 0, fmt.Errorf("cannot parse latitude: %v", err)
-	}
+	
 	return lat, long, nil
 }
 
