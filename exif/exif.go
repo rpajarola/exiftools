@@ -241,6 +241,9 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	if opts == nil {
 		opts = &DecodeOptions{}
 	}
+	if opts.MaxExifSize <= 0 {
+		opts.MaxExifSize = ExifLengthCutoff
+	}
 
 	// EXIF data in JPEG is stored in the APP1 marker. EXIF data uses the TIFF
 	// format to store data.
@@ -286,13 +289,28 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 
 	switch {
 	case isHeif:
-		data, err := io.ReadAll(r) // TODO: this is wasteful (we need a ReaderAt)
-		if err != nil {
-			return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file")
+		// For HEIF files, we need a ReaderAt interface
+		// Try to use a more memory-efficient approach when possible
+		if ra, ok := r.(io.ReaderAt); ok {
+			// If we already have a ReaderAt, use it directly
+			xf, err := heif.ExtractExif(ra)
+			if err != nil {
+				return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
+			}
+			r = bytes.NewReader(xf)
+		} else {
+			// Fallback: read into memory (necessary for ReaderAt interface)
+			data, err := io.ReadAll(r)
+			if err != nil {
+				return nil, fmt.Errorf("exif: unable to read heif/heic file: %w", err)
+			}
+			ra := bytes.NewReader(data)
+			xf, err := heif.ExtractExif(ra)
+			if err != nil {
+				return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
+			}
+			r = bytes.NewReader(xf)
 		}
-		ra := bytes.NewReader(data)
-		xf, err := heif.ExtractExif(ra)
-		r = bytes.NewReader(xf)
 		fallthrough
 	case isRawExif:
 		var header [6]byte
@@ -734,12 +752,23 @@ func (app *appSec) exifReader() (*bytes.Reader, error) {
 // Limits the length of Exif data read to increase speed from large files.
 // The limit is defined in ExifLengthCutoff.
 func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
+	return DecodeWithParseHeaderAndOptions(r, nil)
+}
+
+// DecodeWithParseHeaderAndOptions parses EXIF data with configurable options.
+func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif, err error) {
+	if opts == nil {
+		opts = &DecodeOptions{}
+	}
+	if opts.MaxExifSize <= 0 {
+		opts.MaxExifSize = ExifLengthCutoff
+	}
 	defer func() {
 		if state := recover(); state != nil {
 			err = fmt.Errorf("Exif Error: %v", err)
 		}
 	}()
-	r2 := io.LimitReader(r, int64(ExifLengthCutoff))
+	r2 := io.LimitReader(r, int64(opts.MaxExifSize))
 	data, err := io.ReadAll(r2)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read EXIF data: %w", err)
@@ -770,6 +799,7 @@ func DecodeWithParseHeader(r io.Reader) (x *Exif, err error) {
 		main: map[FieldName]*tiff.Tag{},
 		Tiff: tif,
 		Raw:  raw,
+		opts: *opts,
 	}
 
 	for i, p := range parsers {
