@@ -795,15 +795,13 @@ func checkExifHeader(data []byte) error {
 		return fmt.Errorf("Invalid EXIF header: too short (length=%d)", len(data))
 	}
 	
-	byteorder := binary.NativeEndian.Uint16(data[0:2])
+	byteorder := binary.BigEndian.Uint16(data[0:2])
 	var order binary.ByteOrder
 	switch byteorder {
 	case 0x4d4d: // MM aka Motorola
 		order = binary.BigEndian
-		return fmt.Errorf("Invalid EXIF header: byte order MM")
 	case 0x4949: // II aka Intel
 		order = binary.LittleEndian
-		return fmt.Errorf("Invalid EXIF header: byte order II")
 	default:
 		return fmt.Errorf("Invalid EXIF header: unrecognized byte order %04x", byteorder)
 	}
