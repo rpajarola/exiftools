@@ -236,6 +236,104 @@ func Decode(r io.Reader) (*Exif, error) {
 	return DecodeWithOptions(r, &DecodeOptions{KeepUnknownTags: KeepUnknownTags})
 }
 
+// fileType represents the detected file format
+type fileType int
+
+const (
+	fileTypeTIFF fileType = iota
+	fileTypeRawExif
+	fileTypeHEIF
+	fileTypeJPEG
+)
+
+// detectFileType examines the header to determine the file format
+func detectFileType(header []byte) fileType {
+	switch string(header[0:4]) {
+	case "II*\x00", "MM\x00*":
+		// TIFF - Little/Big endian
+		return fileTypeTIFF
+	case "Exif":
+		return fileTypeRawExif
+	default:
+		if string(header[4:]) == "ftyp" {
+			return fileTypeHEIF
+		}
+		// Assume JPEG
+		return fileTypeJPEG
+	}
+}
+
+// processHEIFFile extracts EXIF data from HEIF/HEIC files
+func processHEIFFile(r io.Reader) (io.Reader, error) {
+	// For HEIF files, we need a ReaderAt interface
+	// Try to use a more memory-efficient approach when possible
+	if ra, ok := r.(io.ReaderAt); ok {
+		// If we already have a ReaderAt, use it directly
+		xf, err := heif.ExtractExif(ra)
+		if err != nil {
+			return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
+		}
+		return bytes.NewReader(xf), nil
+	} else {
+		// Fallback: read into memory (necessary for ReaderAt interface)
+		data, err := io.ReadAll(r)
+		if err != nil {
+			return nil, fmt.Errorf("exif: unable to read heif/heic file: %w", err)
+		}
+		ra := bytes.NewReader(data)
+		xf, err := heif.ExtractExif(ra)
+		if err != nil {
+			return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
+		}
+		return bytes.NewReader(xf), nil
+	}
+}
+
+// processRawExifFile validates and processes raw EXIF data
+func processRawExifFile(r io.Reader) error {
+	var header [6]byte
+	if _, err := io.ReadFull(r, header[:]); err != nil {
+		return fmt.Errorf("exif: unexpected raw exif header read error")
+	}
+	if got, want := string(header[:]), "Exif\x00\x00"; got != want {
+		return fmt.Errorf("exif: unexpected raw exif header; got %q, want %q", got, want)
+	}
+	return nil
+}
+
+// processTIFFFile decodes TIFF data and returns the bytes reader and tiff structure
+func processTIFFFile(r io.Reader) (*bytes.Reader, *tiff.Tiff, error) {
+	// Functions below need the IFDs from the TIFF data to be stored in a
+	// *bytes.Reader.  We use TeeReader to get a copy of the bytes as a
+	// side-effect of tiff.Decode() doing its work.
+	b := &bytes.Buffer{}
+	tr := io.TeeReader(r, b)
+	tif, err := tiff.Decode(tr)
+	if err != nil {
+		return nil, nil, err
+	}
+	return bytes.NewReader(b.Bytes()), tif, nil
+}
+
+// processJPEGFile extracts EXIF data from JPEG APP1 section
+func processJPEGFile(r io.Reader) (*bytes.Reader, *tiff.Tiff, error) {
+	// Locate the JPEG APP1 header.
+	sec, err := newAppSec(jpegAPP1, r)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Strip away EXIF header.
+	er, err := sec.exifReader()
+	if err != nil {
+		return nil, nil, err
+	}
+	tif, err := tiff.Decode(er)
+	if err != nil {
+		return nil, nil, err
+	}
+	return er, tif, nil
+}
+
 // DecodeWithOptions parses EXIF data with the provided options.
 func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	if opts == nil {
@@ -245,115 +343,57 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 		opts.MaxExifSize = ExifLengthCutoff
 	}
 
-	// EXIF data in JPEG is stored in the APP1 marker. EXIF data uses the TIFF
-	// format to store data.
-	// If we're parsing a TIFF image, we don't need to strip away any data.
-	// If we're parsing a JPEG image, we need to strip away the JPEG APP1
-	// marker and also the EXIF header.
-
+	// Read header to detect file type
 	header := make([]byte, 8)
 	n, err := io.ReadFull(r, header)
 	if err != nil {
-		return nil, fmt.Errorf("exif: error reading 4 byte header, got %d, %v", n, err)
+		return nil, fmt.Errorf("exif: error reading 8 byte header, got %d, %v", n, err)
 	}
 
-	var isTiff bool
-	var isRawExif bool
-	var isHeif bool
-	var assumeJPEG bool
-	switch string(header[0:4]) {
-	case "II*\x00":
-		// TIFF - Little endian (Intel)
-		isTiff = true
-	case "MM\x00*":
-		// TIFF - Big endian (Motorola)
-		isTiff = true
-	case "Exif":
-		isRawExif = true
-	default:
-		if string(header[4:]) == "ftyp" {
-			isHeif = true
-		} else {
-			// Assume JPEG
-			assumeJPEG = true
-		}
-	}
+	// Detect the file type
+	fType := detectFileType(header)
 
 	// Put the header bytes back into the reader.
 	r = io.MultiReader(bytes.NewReader(header), r)
+
 	var (
 		er  *bytes.Reader
 		tif *tiff.Tiff
-		sec *appSec
 	)
 
-	switch {
-	case isHeif:
-		// For HEIF files, we need a ReaderAt interface
-		// Try to use a more memory-efficient approach when possible
-		if ra, ok := r.(io.ReaderAt); ok {
-			// If we already have a ReaderAt, use it directly
-			xf, err := heif.ExtractExif(ra)
-			if err != nil {
-				return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
-			}
-			r = bytes.NewReader(xf)
-		} else {
-			// Fallback: read into memory (necessary for ReaderAt interface)
-			data, err := io.ReadAll(r)
-			if err != nil {
-				return nil, fmt.Errorf("exif: unable to read heif/heic file: %w", err)
-			}
-			ra := bytes.NewReader(data)
-			xf, err := heif.ExtractExif(ra)
-			if err != nil {
-				return nil, fmt.Errorf("exif: unable to extract exif from heif/heic file: %w", err)
-			}
-			r = bytes.NewReader(xf)
-		}
-		fallthrough
-	case isRawExif:
-		var header [6]byte
-		if _, err := io.ReadFull(r, header[:]); err != nil {
-			return nil, fmt.Errorf("exif: unexpected raw exif header read error")
-		}
-		if got, want := string(header[:]), "Exif\x00\x00"; got != want {
-			return nil, fmt.Errorf("exif: unexpected raw exif header; got %q, want %q", got, want)
-		}
-		fallthrough
-	case isTiff:
-		// Functions below need the IFDs from the TIFF data to be stored in a
-		// *bytes.Reader.  We use TeeReader to get a copy of the bytes as a
-		// side-effect of tiff.Decode() doing its work.
-		b := &bytes.Buffer{}
-		tr := io.TeeReader(r, b)
-		tif, err = tiff.Decode(tr)
-		er = bytes.NewReader(b.Bytes())
-	case assumeJPEG:
-		// Locate the JPEG APP1 header.
-		sec, err = newAppSec(jpegAPP1, r)
+	// Process based on file type
+	switch fType {
+	case fileTypeHEIF:
+		r, err = processHEIFFile(r)
 		if err != nil {
 			return nil, err
 		}
-		// Strip away EXIF header.
-		er, err = sec.exifReader()
-		if err != nil {
-			return nil, err
+		fallthrough
+	case fileTypeRawExif:
+		if fType == fileTypeRawExif {
+			if err = processRawExifFile(r); err != nil {
+				return nil, err
+			}
 		}
-		tif, err = tiff.Decode(er)
+		fallthrough
+	case fileTypeTIFF:
+		er, tif, err = processTIFFFile(r)
+	case fileTypeJPEG:
+		er, tif, err = processJPEGFile(r)
 	}
 
 	if err != nil {
 		return nil, decodeError{cause: err}
 	}
 
+	// Read raw EXIF data
 	er.Seek(0, 0)
 	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
 	}
 
-	// build an exif structure from the tiff
+	// Build EXIF structure
 	x := &Exif{
 		main: map[FieldName]*tiff.Tag{},
 		Tiff: tif,
@@ -361,6 +401,7 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 		opts: *opts,
 	}
 
+	// Run parsers
 	for i, p := range parsers {
 		if err := p.Parse(x); err != nil {
 			if _, ok := err.(tiffErrors); ok {
