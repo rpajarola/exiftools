@@ -1,66 +1,108 @@
-package exif_test
+package exif
 
 import (
-	"fmt"
-	"log"
 	"os"
-
-	"github.com/rpajarola/exiftools/exif"
-	_ "github.com/rpajarola/exiftools/mknote"
+	"path/filepath"
+	"strings"
+	"testing"
 )
 
-func ExampleDecode() {
-	fname := "sample1.jpg"
+func TestDecodeExample(t *testing.T) {
+	// Test basic EXIF decoding functionality
+	fname := filepath.Join("../testdata", "sample1.jpg")
 
 	f, err := os.Open(fname)
 	if err != nil {
-		log.Fatal(err)
+		t.Skipf("Test file not found: %v", err)
 	}
+	defer f.Close()
 
-	x, err := exif.Decode(f)
+	x, err := Decode(f)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatalf("Decode failed: %v", err)
 	}
 
-	camModel, _ := x.Get(exif.Model) // normally, don't ignore errors!
-	fmt.Println(camModel.StringVal())
+	// Test camera model retrieval
+	if camModel, err := x.Get(Model); err == nil {
+		if model, err := camModel.StringVal(); err == nil {
+			t.Logf("Camera model: %s", model)
+		}
+	}
 
-	focal, _ := x.Get(exif.FocalLength)
-	numer, denom, _ := focal.Rat2(0) // retrieve first (only) rat. value
-	fmt.Printf("%v/%v", numer, denom)
+	// Test focal length retrieval
+	if focal, err := x.Get(FocalLength); err == nil {
+		if numer, denom, err := focal.Rat2(0); err == nil {
+			t.Logf("Focal length: %v/%v", numer, denom)
+		}
+	}
 
-	// Two convenience functions exist for date/time taken and GPS coords:
-	tm, _ := x.DateTime()
-	fmt.Println("Taken: ", tm)
+	// Test convenience functions
+	if tm, err := x.DateTime(); err == nil {
+		t.Logf("Taken: %v", tm)
+	}
 
-	lat, long, _ := x.LatLong()
-	fmt.Println("lat, long: ", lat, ", ", long)
+	if lat, long, err := x.LatLong(); err == nil {
+		t.Logf("Coordinates: %v, %v", lat, long)
+	}
 }
 
-func ExampleDecodeWithParseHeader() {
-	fname := "sample1.jpg"
+func TestDecodeWithParseHeaderExample(t *testing.T) {
+	// Test EXIF decoding with header parsing - finds any JPEG in testdata
+	testDataDir := "../testdata"
 
-	f, err := os.Open(fname)
+	f, err := os.Open(testDataDir)
 	if err != nil {
-		log.Fatal(err)
+		t.Skipf("Test data directory not found: %v", err)
+	}
+	defer f.Close()
+
+	names, err := f.Readdirnames(0)
+	if err != nil {
+		t.Fatalf("Could not read test directory: %v", err)
 	}
 
-	x, err := exif.DecodeWithParseHeader(f)
-	if err != nil {
-		log.Fatal(err)
+	// Find first JPEG file
+	var testFile string
+	for _, name := range names {
+		if strings.HasSuffix(strings.ToLower(name), ".jpg") {
+			testFile = filepath.Join(testDataDir, name)
+			break
+		}
 	}
 
-	camModel, _ := x.Get(exif.Model) // normally, don't ignore errors!
-	fmt.Println(camModel.StringVal())
+	if testFile == "" {
+		t.Skip("No JPEG test files found")
+	}
 
-	focal, _ := x.Get(exif.FocalLength)
-	numer, denom, _ := focal.Rat2(0) // retrieve first (only) rat. value
-	fmt.Printf("%v/%v", numer, denom)
+	testF, err := os.Open(testFile)
+	if err != nil {
+		t.Fatalf("Could not open test file: %v", err)
+	}
+	defer testF.Close()
 
-	// Two convenience functions exist for date/time taken and GPS coords:
-	tm, _ := x.DateTime()
-	fmt.Println("Taken: ", tm)
+	x, err := DecodeWithParseHeader(testF)
+	if err != nil {
+		t.Fatalf("DecodeWithParseHeader failed: %v", err)
+	}
 
-	lat, long, _ := x.LatLong()
-	fmt.Println("lat, long: ", lat, ", ", long)
+	// Test same functionality as basic Decode
+	if camModel, err := x.Get(Model); err == nil {
+		if model, err := camModel.StringVal(); err == nil {
+			t.Logf("Camera model: %s", model)
+		}
+	}
+
+	if focal, err := x.Get(FocalLength); err == nil {
+		if numer, denom, err := focal.Rat2(0); err == nil {
+			t.Logf("Focal length: %v/%v", numer, denom)
+		}
+	}
+
+	if tm, err := x.DateTime(); err == nil {
+		t.Logf("Taken: %v", tm)
+	}
+
+	if lat, long, err := x.LatLong(); err == nil {
+		t.Logf("Coordinates: %v, %v", lat, long)
+	}
 }
