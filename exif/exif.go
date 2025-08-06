@@ -28,7 +28,14 @@ var (
 	ErrExifHeaderError = errors.New("exif header error")
 )
 
+// Deprecated: Use DecodeOptions.KeepUnknownTags instead
 var KeepUnknownTags = false
+
+// DecodeOptions provides configuration options for EXIF decoding
+type DecodeOptions struct {
+	KeepUnknownTags bool
+	MaxExifSize     int
+}
 
 const (
 	jpegAPP1 = 0xE1
@@ -159,23 +166,24 @@ func (p *parser) Parse(x *Exif) error {
 	if len(x.Tiff.Dirs) == 0 {
 		return errors.New("invalid exif data")
 	}
-	x.LoadTags(x.Tiff.Dirs[0], exifFields, KeepUnknownTags)
+	keepUnknown := x.opts.KeepUnknownTags
+	x.LoadTags(x.Tiff.Dirs[0], exifFields, keepUnknown)
 
 	// thumbnails
 	if len(x.Tiff.Dirs) >= 2 {
-		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, KeepUnknownTags)
+		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, keepUnknown)
 	}
 
 	te := make(tiffErrors)
 
 	// recurse into exif, gps, and interop sub-IFDs
-	if err := loadSubDir(x, ExifIFDPointer, exifFields); err != nil {
+	if err := x.loadSubDir(ExifIFDPointer, exifFields); err != nil {
 		te[loadExif] = err.Error()
 	}
-	if err := loadSubDir(x, GPSInfoIFDPointer, gpsFields); err != nil {
+	if err := x.loadSubDir(GPSInfoIFDPointer, gpsFields); err != nil {
 		te[loadGPS] = err.Error()
 	}
-	if err := loadSubDir(x, InteroperabilityIFDPointer, interopFields); err != nil {
+	if err := x.loadSubDir(InteroperabilityIFDPointer, interopFields); err != nil {
 		te[loadInteroperability] = err.Error()
 	}
 	if len(te) > 0 {
@@ -184,7 +192,7 @@ func (p *parser) Parse(x *Exif) error {
 	return nil
 }
 
-func loadSubDir(x *Exif, ptr FieldName, fieldMap map[uint16]FieldName) error {
+func (x *Exif) loadSubDir(ptr FieldName, fieldMap map[uint16]FieldName) error {
 	r := bytes.NewReader(x.Raw)
 
 	tag, err := x.Get(ptr)
@@ -204,7 +212,7 @@ func loadSubDir(x *Exif, ptr FieldName, fieldMap map[uint16]FieldName) error {
 	if err != nil {
 		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
 	}
-	x.LoadTags(subDir, fieldMap, KeepUnknownTags)
+	x.LoadTags(subDir, fieldMap, x.opts.KeepUnknownTags)
 	return nil
 }
 
@@ -213,6 +221,7 @@ type Exif struct {
 	Tiff *tiff.Tiff
 	main map[FieldName]*tiff.Tag
 	Raw  []byte
+	opts DecodeOptions
 }
 
 // Decode parses EXIF data from r (a TIFF, JPEG, or raw EXIF block)
@@ -224,6 +233,14 @@ type Exif struct {
 // The error can be inspected with functions such as IsCriticalError
 // to determine whether the returned object might still be usable.
 func Decode(r io.Reader) (*Exif, error) {
+	return DecodeWithOptions(r, &DecodeOptions{KeepUnknownTags: KeepUnknownTags})
+}
+
+// DecodeWithOptions parses EXIF data with the provided options.
+func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
+	if opts == nil {
+		opts = &DecodeOptions{}
+	}
 
 	// EXIF data in JPEG is stored in the APP1 marker. EXIF data uses the TIFF
 	// format to store data.
@@ -323,6 +340,7 @@ func Decode(r io.Reader) (*Exif, error) {
 		main: map[FieldName]*tiff.Tag{},
 		Tiff: tif,
 		Raw:  raw,
+		opts: *opts,
 	}
 
 	for i, p := range parsers {
