@@ -1,7 +1,7 @@
 package main
 
-//go:generate go run regen.go -- regression_test.go
-//go:generate go fmt regression_test.go
+//go:generate go run regen.go -- regression_data.go
+//go:generate go fmt regression_data.go
 
 import (
 	"flag"
@@ -72,7 +72,7 @@ func makeExpected(files []string, w io.Writer) {
 
 		var items []string
 		x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
-			items = append(items, fmt.Sprintf("\"%v\": `%v`,\n", name, tag.String()))
+			items = append(items, fmt.Sprintf("\"%v\": %q,\n", name, tag.String()))
 			return nil
 		}))
 		sort.Strings(items)
