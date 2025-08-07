@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"testing"
 
 	"github.com/rpajarola/exiftools/exif"
