@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +11,6 @@ import (
 	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
-
 
 func TestRegression(t *testing.T) {
 	// Get all test files
@@ -27,67 +27,64 @@ func TestRegression(t *testing.T) {
 
 	// Test each file that we have expected data for
 	for _, name := range names {
-		if filepath.Ext(name) != ".jpg" && filepath.Ext(name) != ".heic" {
-			continue
-		}
-
-		expected, exists := regressExpected[name]
-		if !exists {
-			t.Errorf("No expected data found for test file %s", name)
+		want, ok := regressExpected[name]
+		if !ok {
+			t.Errorf("No regression data found for test file %s", name)
 			continue
 		}
 
 		t.Run(name, func(t *testing.T) {
-			compareFile(t, name, expected)
+			compareFile(t, name, want)
 		})
 	}
 }
 
-func compareFile(t *testing.T, filename string, expected map[string]string) {
+func compareFile(t *testing.T, filename string, want map[string]string) {
 	filepath := filepath.Join(testDataDir, filename)
-	
+
 	f, err := os.Open(filepath)
 	if err != nil {
 		t.Fatalf("Could not open test file '%s': %v", filepath, err)
 	}
 	defer f.Close()
 
+	got := make(map[string]string)
+
 	// Use DecodeWithParseHeader to handle all file types including HEIC
 	x, err := exif.DecodeWithParseHeader(f)
 	if err != nil {
-		t.Fatalf("Could not decode EXIF data from '%s': %v", filepath, err)
+		got["ERROR"] = fmt.Sprintf("%v", err)
+	} else {
+
+		// Extract values from decoded EXIF
+		err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
+			got[string(name)] = tag.String()
+			return nil
+		}))
+		if err != nil {
+			t.Fatalf("Could not walk EXIF tags for '%s': %v", filepath, err)
+		}
 	}
 
-	// Extract values from decoded EXIF
-	actual := make(map[string]string)
-	err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
-		actual[string(name)] = tag.String()
-		return nil
-	}))
-	if err != nil {
-		t.Fatalf("Could not walk EXIF tags for '%s': %v", filepath, err)
-	}
-
-	// Compare expected vs actual
-	// Check for missing fields in actual
-	for field, expectedValue := range expected {
-		actualValue, exists := actual[field]
+	// Check for missing fields and wrong values
+	for field, wantValue := range want {
+		gotValue, exists := got[field]
 		if !exists {
-			t.Errorf("Field %s missing from decoded EXIF (expected: %s)", field, expectedValue)
+			t.Errorf("Field %s missing from decoded EXIF (want: %s)", field, wantValue)
 			continue
 		}
-		if actualValue != expectedValue {
-			t.Errorf("Field %s value mismatch:\n  expected: %s\n  actual:   %s", field, expectedValue, actualValue)
+		if gotValue != wantValue {
+			t.Errorf("Field %s value mismatch:\n  got: %s, want: %s", field, gotValue, wantValue)
 		}
 	}
 
-	// Check for unexpected fields in actual (this might be too strict, so we'll just log them)
-	for field, actualValue := range actual {
-		if _, exists := expected[field]; !exists {
-			t.Logf("Unexpected field %s found in decoded EXIF: %s", field, actualValue)
+	// Check for unexpected fields
+	for field, gotValue := range got {
+		if _, exists := want[field]; !exists {
+			t.Errorf("Unexpected field %s found in decoded EXIF: %s", field, gotValue)
 		}
 	}
 
 	// Log summary
-	t.Logf("File %s: %d expected fields, %d actual fields", filename, len(expected), len(actual))
+	t.Logf("File %s: got %d, want %d", filename, len(got), len(want))
 }
