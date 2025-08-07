@@ -1,4 +1,4 @@
-package exif
+package main
 
 var regressExpected = map[string]map[string]string{
 	"2004-01-11-22-45-15-sep-2004-01-11-22-45-15a.jpg": {

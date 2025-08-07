@@ -1,8 +1,5 @@
 package exif
 
-//go:generate go run regen_regress.go -- regress_expected_test.go
-//go:generate go fmt regress_expected_test.go
-
 import (
 	"bytes"
 	"flag"

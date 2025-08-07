@@ -1,7 +1,7 @@
-//go:build ignore
-// +build ignore
-
 package main
+
+//go:generate go run regen.go -- regression_test.go
+//go:generate go fmt regression_test.go
 
 import (
 	"flag"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/rpajarola/exiftools/exif"
 	_ "github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -47,7 +48,7 @@ func main() {
 }
 
 func makeExpected(files []string, w io.Writer) {
-	fmt.Fprintf(w, "package exif\n\n")
+	fmt.Fprintf(w, "package main\n\n")
 	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n")
 
 	for _, name := range files {
@@ -70,7 +71,7 @@ func makeExpected(files []string, w io.Writer) {
 		}
 
 		var items []string
-		x.Walk(walkFunc(func(name exif.FieldName, tag *tiff.Tag) error {
+		x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 			items = append(items, fmt.Sprintf("\"%v\": `%v`,\n", name, tag.String()))
 			return nil
 		}))
@@ -86,8 +87,8 @@ func makeExpected(files []string, w io.Writer) {
 	fmt.Fprintf(w, "}")
 }
 
-type walkFunc func(exif.FieldName, *tiff.Tag) error
+type walkFunc func(models.FieldName, *tiff.Tag) error
 
-func (f walkFunc) Walk(name exif.FieldName, tag *tiff.Tag) error {
+func (f walkFunc) Walk(name models.FieldName, tag *tiff.Tag) error {
 	return f(name, tag)
 }
