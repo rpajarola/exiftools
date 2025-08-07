@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -18,7 +19,7 @@ func init() {
 	exif.RegisterParsers(All...)
 }
 
-func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr exif.FieldName, fieldMap map[uint16]exif.FieldName) error {
+func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr models.FieldName, fieldMap map[uint16]models.FieldName) error {
 	tag, err := x.Get(ptr)
 	if err != nil {
 		return nil

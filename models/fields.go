@@ -1,4 +1,4 @@
-package exif
+package models
 
 // FieldName - Name of Tag field EXIF
 type FieldName string
@@ -14,7 +14,7 @@ const (
 	BitsPerSample              FieldName = "BitsPerSample"
 	Compression                FieldName = "Compression"
 	PhotometricInterpretation  FieldName = "PhotometricInterpretation"
-	Orientation                FieldName = "Orientation"
+	OrientationTag             FieldName = "Orientation"
 	SamplesPerPixel            FieldName = "SamplesPerPixel"
 	PlanarConfiguration        FieldName = "PlanarConfiguration"
 	YCbCrSubSampling           FieldName = "YCbCrSubSampling"
@@ -61,7 +61,7 @@ const (
 	ExposureBiasValue          FieldName = "ExposureBiasValue"
 	MaxApertureValue           FieldName = "MaxApertureValue"
 	SubjectDistance            FieldName = "SubjectDistance"
-	MeteringMode               FieldName = "MeteringMode"
+	MeteringModeTag            FieldName = "MeteringMode"
 	LightSource                FieldName = "LightSource"
 	Flash                      FieldName = "Flash"
 	FocalLength                FieldName = "FocalLength"
@@ -78,7 +78,7 @@ const (
 	SceneType                  FieldName = "SceneType"
 	CFAPattern                 FieldName = "CFAPattern"
 	CustomRendered             FieldName = "CustomRendered"
-	ExposureMode               FieldName = "ExposureMode"
+	ExposureModeTag            FieldName = "ExposureMode"
 	WhiteBalance               FieldName = "WhiteBalance"
 	DigitalZoomRatio           FieldName = "DigitalZoomRatio"
 	FocalLengthIn35mmFilm      FieldName = "FocalLengthIn35mmFilm"
@@ -157,10 +157,15 @@ const (
 	InteroperabilityIndex FieldName = "InteroperabilityIndex"
 )
 
-// SubIfds Pointer
-const subIfdsPointer = 0x014A
+// Pointer constants for various IFDs
+const (
+	subIfdsPointer = 0x014A
+	exifPointer    = 0x8769
+	gpsPointer     = 0x8825
+	interopPointer = 0xA005
+)
 
-var exifFields = map[uint16]FieldName{
+var ExifFields = map[uint16]FieldName{
 	/////////////////////////////////////
 	////////// IFD 0 ////////////////////
 	/////////////////////////////////////
@@ -171,7 +176,7 @@ var exifFields = map[uint16]FieldName{
 	0x0102: BitsPerSample,
 	0x0103: Compression,
 	0x0106: PhotometricInterpretation,
-	0x0112: Orientation,
+	0x0112: OrientationTag,
 	0x0115: SamplesPerPixel,
 	0x011C: PlanarConfiguration,
 	0x0212: YCbCrSubSampling,
@@ -248,7 +253,7 @@ var exifFields = map[uint16]FieldName{
 	0x9204: ExposureBiasValue,
 	0x9205: MaxApertureValue,
 	0x9206: SubjectDistance,
-	0x9207: MeteringMode,
+	0x9207: MeteringModeTag,
 	0x9208: LightSource,
 	0x9209: Flash,
 	0x920A: FocalLength,
@@ -265,7 +270,7 @@ var exifFields = map[uint16]FieldName{
 	0xA301: SceneType,
 	0xA302: CFAPattern,
 	0xA401: CustomRendered,
-	0xA402: ExposureMode,
+	0xA402: ExposureModeTag,
 	0xA403: WhiteBalance,
 	0xA404: DigitalZoomRatio,
 	0xA405: FocalLengthIn35mmFilm,
@@ -281,7 +286,7 @@ var exifFields = map[uint16]FieldName{
 	0xA435: LensSerialNumber,
 }
 
-var gpsFields = map[uint16]FieldName{
+var GpsFields = map[uint16]FieldName{
 	/////////////////////////////////////
 	//// GPS sub-IFD ////////////////////
 	/////////////////////////////////////
@@ -318,14 +323,14 @@ var gpsFields = map[uint16]FieldName{
 	0x1E: GPSDifferential,
 }
 
-var interopFields = map[uint16]FieldName{
+var InteropFields = map[uint16]FieldName{
 	/////////////////////////////////////
 	//// Interoperability sub-IFD ///////
 	/////////////////////////////////////
 	0x1: InteroperabilityIndex,
 }
 
-var thumbnailFields = map[uint16]FieldName{
+var ThumbnailFields = map[uint16]FieldName{
 	0x0201: ThumbJPEGInterchangeFormat,
 	0x0202: ThumbJPEGInterchangeFormatLength,
 }

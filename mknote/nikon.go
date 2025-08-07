@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -17,36 +18,36 @@ var ()
 
 // Nikon-specific Maker Note fields
 var (
-	NikonVersion        exif.FieldName = "Nikon.Version"
-	NikonWhiteBalance   exif.FieldName = "Nikon.WhiteBalance"
-	NikonColorSpace     exif.FieldName = "Nikon.ColorSpace"
-	NikonLightSource    exif.FieldName = "Nikon.LightSource"
-	NikonSaturation     exif.FieldName = "Nikon.Saturation"
-	NikonShotInfo       exif.FieldName = "Nikon.ShotInfo"       // A sub-IFD
-	NikonVRInfo         exif.FieldName = "Nikon.VRInfo"         // A sub-IFD
-	NikonPictureControl exif.FieldName = "Nikon.PictureControl" // A sub-IFD
-	NikonWorldTime      exif.FieldName = "Nikon.WorldTime"      // A sub-IFD
+	NikonVersion        models.FieldName = "Nikon.Version"
+	NikonWhiteBalance   models.FieldName = "Nikon.WhiteBalance"
+	NikonColorSpace     models.FieldName = "Nikon.ColorSpace"
+	NikonLightSource    models.FieldName = "Nikon.LightSource"
+	NikonSaturation     models.FieldName = "Nikon.Saturation"
+	NikonShotInfo       models.FieldName = "Nikon.ShotInfo"       // A sub-IFD
+	NikonVRInfo         models.FieldName = "Nikon.VRInfo"         // A sub-IFD
+	NikonPictureControl models.FieldName = "Nikon.PictureControl" // A sub-IFD
+	NikonWorldTime      models.FieldName = "Nikon.WorldTime"      // A sub-IFD
 	// TODO: fix regression test
 	// This breaks regression test due to string literal in generated code
-	// NikonISOInfo        exif.FieldName = "Nikon.ISOInfo"        // A sub-IFD
-	NikonAFInfo        exif.FieldName = "Nikon.AFInfo"        // A sub-IFD
-	NikonColorBalance  exif.FieldName = "Nikon.ColorBalance"  // A sub-IFD
-	NikonLensData      exif.FieldName = "Nikon.LensData"      // A sub-IFD
-	NikonSerialNO      exif.FieldName = "Nikon.SerialNO"      // usually starts with "NO="
-	NikonFlashInfo     exif.FieldName = "Nikon.FlashInfo"     // A sub-IFD
-	NikonMultiExposure exif.FieldName = "Nikon.MultiExposure" // A sub-IFD
-	NikonAFInfo2       exif.FieldName = "Nikon.AFInfo2"       // A sub-IFD
-	NikonFileInfo      exif.FieldName = "Nikon.FileInfo"      // A sub-IFD
-	NikonAFTune        exif.FieldName = "Nikon.AFTune"        // A sub-IFD
-	NikonPreviewPtr    exif.FieldName = "Nikon.PreviewSubIFD" // A sub-IFD
-	Nikon3_0x000a      exif.FieldName = "Nikon3.0x000a"
-	Nikon3_0x009b      exif.FieldName = "Nikon3.0x009b"
-	Nikon3_0x009f      exif.FieldName = "Nikon3.0x009f"
-	Nikon3_0x00a3      exif.FieldName = "Nikon3.0x00a3"
+	// NikonISOInfo        models.FieldName = "Nikon.ISOInfo"        // A sub-IFD
+	NikonAFInfo        models.FieldName = "Nikon.AFInfo"        // A sub-IFD
+	NikonColorBalance  models.FieldName = "Nikon.ColorBalance"  // A sub-IFD
+	NikonLensData      models.FieldName = "Nikon.LensData"      // A sub-IFD
+	NikonSerialNO      models.FieldName = "Nikon.SerialNO"      // usually starts with "NO="
+	NikonFlashInfo     models.FieldName = "Nikon.FlashInfo"     // A sub-IFD
+	NikonMultiExposure models.FieldName = "Nikon.MultiExposure" // A sub-IFD
+	NikonAFInfo2       models.FieldName = "Nikon.AFInfo2"       // A sub-IFD
+	NikonFileInfo      models.FieldName = "Nikon.FileInfo"      // A sub-IFD
+	NikonAFTune        models.FieldName = "Nikon.AFTune"        // A sub-IFD
+	NikonPreviewPtr    models.FieldName = "Nikon.PreviewSubIFD" // A sub-IFD
+	Nikon3_0x000a      models.FieldName = "Nikon3.0x000a"
+	Nikon3_0x009b      models.FieldName = "Nikon3.0x009b"
+	Nikon3_0x009f      models.FieldName = "Nikon3.0x009f"
+	Nikon3_0x00a3      models.FieldName = "Nikon3.0x00a3"
 )
 
 // Nikon version 3 Maker Notes fields (used by E5400, SQ, D2H, D70, and newer)
-var makerNoteNikon3Fields = map[uint16]exif.FieldName{
+var makerNoteNikon3Fields = map[uint16]models.FieldName{
 	0x0001: NikonVersion,
 	0x0002: ISOSpeed,
 	0x0003: ColorMode,
@@ -141,13 +142,13 @@ var makerNoteNikon3Fields = map[uint16]exif.FieldName{
 
 // Nikon NikonPreviewPtr Sub-IFD fields
 const (
-	NikonPreviewSubfileType exif.FieldName = "Nikon.Preview.SubfileType"
-	NikonPreviewImageStart  exif.FieldName = "Nikon.Preview.ImageStart"
-	NikonPreviewImageLength exif.FieldName = "Nikon.Preview.ImageLength"
-	NikonPreviewCompression exif.FieldName = "Nikon.Preview.Compression"
+	NikonPreviewSubfileType models.FieldName = "Nikon.Preview.SubfileType"
+	NikonPreviewImageStart  models.FieldName = "Nikon.Preview.ImageStart"
+	NikonPreviewImageLength models.FieldName = "Nikon.Preview.ImageLength"
+	NikonPreviewCompression models.FieldName = "Nikon.Preview.Compression"
 )
 
-var makerNoteNikon3PreviewFields = map[uint16]exif.FieldName{
+var makerNoteNikon3PreviewFields = map[uint16]models.FieldName{
 	0x00fe: NikonPreviewSubfileType,
 	0x0103: NikonPreviewCompression,
 	0x0201: NikonPreviewImageStart,
@@ -167,7 +168,7 @@ var NikonPreviewImageTag = exif.NewPreviewImageTag(NikonPreviewImageStart, Nikon
 
 // Parse decodes all Nikon makernote data found in x and adds it to x.
 func (*nikonV3) Parse(x *exif.Exif) error {
-	m, err := x.Get(exif.MakerNote)
+	m, err := x.Get(models.MakerNote)
 	if err != nil {
 		return nil
 	}

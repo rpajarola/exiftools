@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -67,7 +68,7 @@ func TestDecodeRawEXIF(t *testing.T) {
 		t.Fatalf("Decode: %v", err)
 	}
 	got := map[string]string{}
-	err = x.Walk(walkFunc(func(name FieldName, tag *tiff.Tag) error {
+	err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 		got[fmt.Sprint(name)] = fmt.Sprint(tag)
 		return nil
 	}))
@@ -85,9 +86,9 @@ func TestDecodeRawEXIF(t *testing.T) {
 	}
 }
 
-type walkFunc func(FieldName, *tiff.Tag) error
+type walkFunc func(models.FieldName, *tiff.Tag) error
 
-func (f walkFunc) Walk(name FieldName, tag *tiff.Tag) error {
+func (f walkFunc) Walk(name models.FieldName, tag *tiff.Tag) error {
 	return f(name, tag)
 }
 
@@ -96,7 +97,7 @@ type walker struct {
 	t       *testing.T
 }
 
-func (w *walker) Walk(field FieldName, tag *tiff.Tag) error {
+func (w *walker) Walk(field models.FieldName, tag *tiff.Tag) error {
 	// this needs to be commented out when regenerating regress expected vals
 	pic := regressExpected[w.picName]
 	if pic == nil {
@@ -257,19 +258,19 @@ func TestDecodeHEIF(t *testing.T) {
 
 	// Test that we can extract some basic EXIF data
 	// Try to get some common fields to verify EXIF data was extracted
-	if make, err := x.Get(Make); err == nil {
+	if make, err := x.Get(models.Make); err == nil {
 		if makeStr, err := make.StringVal(); err == nil {
 			t.Logf("Camera make: %s", makeStr)
 		}
 	}
 
-	if model, err := x.Get(Model); err == nil {
+	if model, err := x.Get(models.Model); err == nil {
 		if modelStr, err := model.StringVal(); err == nil {
 			t.Logf("Camera model: %s", modelStr)
 		}
 	}
 
-	if datetime, err := x.Get(DateTime); err == nil {
+	if datetime, err := x.Get(models.DateTime); err == nil {
 		if dtStr, err := datetime.StringVal(); err == nil {
 			t.Logf("DateTime: %s", dtStr)
 		}
@@ -288,7 +289,7 @@ func TestDecodeHEIF(t *testing.T) {
 
 	// Verify we can walk through all the EXIF tags
 	tagCount := 0
-	err = x.Walk(walkFunc(func(name FieldName, tag *tiff.Tag) error {
+	err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 		tagCount++
 		return nil
 	}))

@@ -11,7 +11,7 @@ import (
 
 func createMockExif() *Exif {
 	return &Exif{
-		main: make(map[FieldName]*tiff.Tag),
+		main: make(map[models.FieldName]*tiff.Tag),
 	}
 }
 
@@ -74,8 +74,8 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "ImageWidth and ImageLength tags present",
 			setupTags: func(e *Exif) {
-				e.main[ImageWidth] = createMockIntTag(1920)
-				e.main[ImageLength] = createMockIntTag(1080)
+				e.main[models.ImageWidth] = createMockIntTag(1920)
+				e.main[models.ImageLength] = createMockIntTag(1080)
 			},
 			expectedWidth:  1920,
 			expectedHeight: 1080,
@@ -83,8 +83,8 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "PixelXDimension and PixelYDimension tags present",
 			setupTags: func(e *Exif) {
-				e.main[PixelXDimension] = createMockIntTag(3840)
-				e.main[PixelYDimension] = createMockIntTag(2160)
+				e.main[models.PixelXDimension] = createMockIntTag(3840)
+				e.main[models.PixelYDimension] = createMockIntTag(2160)
 			},
 			expectedWidth:  3840,
 			expectedHeight: 2160,
@@ -100,7 +100,7 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "Only width tag present",
 			setupTags: func(e *Exif) {
-				e.main[ImageWidth] = createMockIntTag(1920)
+				e.main[models.ImageWidth] = createMockIntTag(1920)
 			},
 			expectedWidth:  1920,
 			expectedHeight: 0,
@@ -134,7 +134,7 @@ func TestGetOrientation(t *testing.T) {
 		{
 			name: "Valid orientation value",
 			setupTags: func(e *Exif) {
-				e.main[Orientation] = createMockIntTag(3)
+				e.main[models.OrientationTag] = createMockIntTag(3)
 			},
 			expected:    models.NewOrientation(3),
 			expectError: false,
@@ -179,7 +179,7 @@ func TestGetFlashMode(t *testing.T) {
 		{
 			name: "Valid flash value",
 			setupTags: func(e *Exif) {
-				e.main[Flash] = createMockIntTag(1)
+				e.main[models.Flash] = createMockIntTag(1)
 			},
 			expected:    models.NewFlashMode(1),
 			expectError: false,
@@ -224,7 +224,7 @@ func TestGetExposureBias(t *testing.T) {
 		{
 			name: "Valid exposure bias",
 			setupTags: func(e *Exif) {
-				e.main[ExposureBiasValue] = createMockRationalTag(-1, 3)
+				e.main[models.ExposureBiasValue] = createMockRationalTag(-1, 3)
 			},
 			expected:    models.NewExposureBias(-1, 3),
 			expectError: false,
@@ -269,7 +269,7 @@ func TestGetAperture(t *testing.T) {
 		{
 			name: "Valid aperture value",
 			setupTags: func(e *Exif) {
-				e.main[FNumber] = createMockRationalTag(28, 10)
+				e.main[models.FNumber] = createMockRationalTag(28, 10)
 			},
 			expected:    2.8,
 			expectError: false,
@@ -314,7 +314,7 @@ func TestGetISOSpeed(t *testing.T) {
 		{
 			name: "Valid ISO value",
 			setupTags: func(e *Exif) {
-				e.main[ISOSpeedRatings] = createMockIntTag(800)
+				e.main[models.ISOSpeedRatings] = createMockIntTag(800)
 			},
 			expected:    800,
 			expectError: false,
@@ -359,7 +359,7 @@ func TestGetShutterSpeed(t *testing.T) {
 		{
 			name: "Valid shutter speed",
 			setupTags: func(e *Exif) {
-				e.main[ExposureTime] = createMockRationalTag(1, 250)
+				e.main[models.ExposureTime] = createMockRationalTag(1, 250)
 			},
 			expected:    models.NewShutterSpeed(1, 250),
 			expectError: false,
@@ -404,7 +404,7 @@ func TestGetMeteringMode(t *testing.T) {
 		{
 			name: "Valid metering mode",
 			setupTags: func(e *Exif) {
-				e.main[MeteringMode] = createMockIntTag(3)
+				e.main[models.MeteringModeTag] = createMockIntTag(3)
 			},
 			expected:    models.NewMeteringMode(3),
 			expectError: false,
@@ -449,7 +449,7 @@ func TestGetExposureMode(t *testing.T) {
 		{
 			name: "Valid exposure mode",
 			setupTags: func(e *Exif) {
-				e.main[ExposureProgram] = createMockIntTag(2)
+				e.main[models.ExposureProgram] = createMockIntTag(2)
 			},
 			expected:    models.NewExposureMode(2),
 			expectError: false,
@@ -488,16 +488,16 @@ func TestGetString(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupTags   func(*Exif)
-		field       FieldName
+		field       models.FieldName
 		expected    string
 		expectError bool
 	}{
 		{
 			name: "Valid string value",
 			setupTags: func(e *Exif) {
-				e.main[Make] = createMockStringTag("  Canon EOS 5D  ")
+				e.main[models.Make] = createMockStringTag("  Canon EOS 5D  ")
 			},
-			field:       Make,
+			field:       models.Make,
 			expected:    "Canon EOS 5D",
 			expectError: false,
 		},
@@ -506,7 +506,7 @@ func TestGetString(t *testing.T) {
 			setupTags: func(e *Exif) {
 				// No tags added
 			},
-			field:       Make,
+			field:       models.Make,
 			expected:    "",
 			expectError: true,
 		},
@@ -536,25 +536,25 @@ func TestGetStrings(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupTags   func(*Exif)
-		fields      []FieldName
+		fields      []models.FieldName
 		expected    string
 		expectError bool
 	}{
 		{
 			name: "First field present",
 			setupTags: func(e *Exif) {
-				e.main[Make] = createMockStringTag("  Test Value  ")
+				e.main[models.Make] = createMockStringTag("  Test Value  ")
 			},
-			fields:      []FieldName{Make, Model},
+			fields:      []models.FieldName{models.Make, models.Model},
 			expected:    "Test Value",
 			expectError: false,
 		},
 		{
 			name: "Second field present",
 			setupTags: func(e *Exif) {
-				e.main[Model] = createMockStringTag("  Model Value  ")
+				e.main[models.Model] = createMockStringTag("  Model Value  ")
 			},
-			fields:      []FieldName{Make, Model},
+			fields:      []models.FieldName{models.Make, models.Model},
 			expected:    "Model Value",
 			expectError: false,
 		},
@@ -563,7 +563,7 @@ func TestGetStrings(t *testing.T) {
 			setupTags: func(e *Exif) {
 				// No tags added
 			},
-			fields:      []FieldName{Make, Model},
+			fields:      []models.FieldName{models.Make, models.Model},
 			expected:    "",
 			expectError: true,
 		},
@@ -593,25 +593,25 @@ func TestGetUints(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupTags   func(*Exif)
-		fields      []FieldName
+		fields      []models.FieldName
 		expected    uint
 		expectError bool
 	}{
 		{
 			name: "First field present",
 			setupTags: func(e *Exif) {
-				e.main[ImageWidth] = createMockIntTag(1920)
+				e.main[models.ImageWidth] = createMockIntTag(1920)
 			},
-			fields:      []FieldName{ImageWidth, ImageLength},
+			fields:      []models.FieldName{models.ImageWidth, models.ImageLength},
 			expected:    1920,
 			expectError: false,
 		},
 		{
 			name: "Second field present",
 			setupTags: func(e *Exif) {
-				e.main[ImageLength] = createMockIntTag(1080)
+				e.main[models.ImageLength] = createMockIntTag(1080)
 			},
-			fields:      []FieldName{ImageWidth, ImageLength},
+			fields:      []models.FieldName{models.ImageWidth, models.ImageLength},
 			expected:    1080,
 			expectError: false,
 		},
@@ -620,7 +620,7 @@ func TestGetUints(t *testing.T) {
 			setupTags: func(e *Exif) {
 				// No tags added
 			},
-			fields:      []FieldName{ImageWidth, ImageLength},
+			fields:      []models.FieldName{models.ImageWidth, models.ImageLength},
 			expected:    0,
 			expectError: true,
 		},
@@ -656,8 +656,8 @@ func TestGPSAltitude(t *testing.T) {
 		{
 			name: "Above sea level",
 			setupTags: func(e *Exif) {
-				e.main[GPSAltitude] = createMockRationalTag(1500, 10)
-				e.main[GPSAltitudeRef] = createMockIntTag(0)
+				e.main[models.GPSAltitude] = createMockRationalTag(1500, 10)
+				e.main[models.GPSAltitudeRef] = createMockIntTag(0)
 			},
 			expected:    150.0,
 			expectError: false,
@@ -665,8 +665,8 @@ func TestGPSAltitude(t *testing.T) {
 		{
 			name: "Below sea level",
 			setupTags: func(e *Exif) {
-				e.main[GPSAltitude] = createMockRationalTag(300, 10)
-				e.main[GPSAltitudeRef] = createMockIntTag(1)
+				e.main[models.GPSAltitude] = createMockRationalTag(300, 10)
+				e.main[models.GPSAltitudeRef] = createMockIntTag(1)
 			},
 			expected:    -30.0,
 			expectError: false,
@@ -705,34 +705,34 @@ func TestFocalLength(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupTags   func(*Exif)
-		field       FieldName
+		field       models.FieldName
 		expected    float32
 		expectError bool
 	}{
 		{
 			name: "Rational type focal length",
 			setupTags: func(e *Exif) {
-				e.main[FocalLength] = createMockRationalTag(85, 1)
+				e.main[models.FocalLength] = createMockRationalTag(85, 1)
 			},
-			field:       FocalLength,
+			field:       models.FocalLength,
 			expected:    85.0,
 			expectError: false,
 		},
 		{
 			name: "Zero denominator",
 			setupTags: func(e *Exif) {
-				e.main[FocalLength] = createMockRationalTag(85, 0)
+				e.main[models.FocalLength] = createMockRationalTag(85, 0)
 			},
-			field:       FocalLength,
+			field:       models.FocalLength,
 			expected:    85.0,
 			expectError: false,
 		},
 		{
 			name: "Short type focal length - single value",
 			setupTags: func(e *Exif) {
-				e.main[FocalLength] = createMockShortTag(0, 85) // When a == 0, returns b as float
+				e.main[models.FocalLength] = createMockShortTag(0, 85) // When a == 0, returns b as float
 			},
-			field:       FocalLength,
+			field:       models.FocalLength,
 			expected:    85.0,
 			expectError: false,
 		},
@@ -741,7 +741,7 @@ func TestFocalLength(t *testing.T) {
 			setupTags: func(e *Exif) {
 				// No tags added
 			},
-			field:       FocalLength,
+			field:       models.FocalLength,
 			expected:    0,
 			expectError: true,
 		},
@@ -777,8 +777,8 @@ func TestGPSTimeStamp(t *testing.T) {
 		{
 			name: "Valid GPS timestamp with seconds",
 			setupTags: func(e *Exif) {
-				e.main[GPSDateStamp] = createMockStringTag("2023:12:25")
-				e.main[GPSTimeStamp] = createMockGPSTimeTag(14, 30, 45500, 1000)
+				e.main[models.GPSDateStamp] = createMockStringTag("2023:12:25")
+				e.main[models.GPSTimeStamp] = createMockGPSTimeTag(14, 30, 45500, 1000)
 			},
 			expected:    time.Date(2023, 12, 25, 14, 30, 45, 500000000, time.UTC),
 			expectError: false,
@@ -794,7 +794,7 @@ func TestGPSTimeStamp(t *testing.T) {
 		{
 			name: "No time stamp tag",
 			setupTags: func(e *Exif) {
-				e.main[GPSDateStamp] = createMockStringTag("2023:12:25")
+				e.main[models.GPSDateStamp] = createMockStringTag("2023:12:25")
 			},
 			expected:    time.Time{},
 			expectError: true,

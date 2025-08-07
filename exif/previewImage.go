@@ -1,6 +1,10 @@
 package exif
 
-import "fmt"
+import (
+	"fmt"
+	
+	"github.com/rpajarola/exiftools/models"
+)
 
 var exifCompressionValues = map[uint16]string{
 	6:     "JPEG (old-style)",
@@ -15,27 +19,27 @@ var exifCompressionValues = map[uint16]string{
 
 // PreviewImageTag -
 type PreviewImageTag struct {
-	StartTag    FieldName
-	LengthTag   FieldName
-	Compression FieldName
+	StartTag    models.FieldName
+	LengthTag   models.FieldName
+	Compression models.FieldName
 	Start       int
 	Length      int
 }
 
 // NewPreviewImageTag -
-func NewPreviewImageTag(start FieldName, length FieldName, compression FieldName) PreviewImageTag {
+func NewPreviewImageTag(start models.FieldName, length models.FieldName, compression models.FieldName) PreviewImageTag {
 	return PreviewImageTag{start, length, compression, 0, 0}
 }
 
 // PreviewImage returns the byte start location and length of the preview Image.
 func (x Exif) PreviewImage(tags ...PreviewImageTag) (start int64, length int64, err error) {
 	tags = append(tags,
-		NewPreviewImageTag(PreviewImageStart, PreviewImageLength, FieldName("None")),                        // IFD0 PreviewImage
-		NewPreviewImageTag(ThumbJPEGInterchangeFormat, ThumbJPEGInterchangeFormatLength, FieldName("None")), // IFD0 ThumbnailImage
+		NewPreviewImageTag(models.PreviewImageStart, models.PreviewImageLength, models.FieldName("None")),                        // IFD0 PreviewImage
+		NewPreviewImageTag(models.ThumbJPEGInterchangeFormat, models.ThumbJPEGInterchangeFormatLength, models.FieldName("None")), // IFD0 ThumbnailImage
 	)
 	for i, tag := range tags {
 		// If Preview Image is of type JPEG, PNG, WEBP else continue
-		if tag.Compression != FieldName("None") {
+		if tag.Compression != models.FieldName("None") {
 			compression, err := x.Get(tag.Compression)
 			if err == nil {
 				c, err := compression.Int(0)

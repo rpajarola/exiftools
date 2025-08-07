@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -20,21 +21,21 @@ var sony9050tbl = makeSony9050tbl()
 
 // Sony specific fields
 var (
-	SonyShutterCount          exif.FieldName = "Sony.ShutterCount"
-	SonyShutterCount2         exif.FieldName = "Sony.ShutterCount2"
-	SonyShutterCount3         exif.FieldName = "Sony.ShutterCount3"
-	SonyInternalSerialNumber  exif.FieldName = "Sony.InternalSerialNumber"
-	SonyInternalSerialNumber2 exif.FieldName = "Sony.InternalSerialNumber2"
+	SonyShutterCount          models.FieldName = "Sony.ShutterCount"
+	SonyShutterCount2         models.FieldName = "Sony.ShutterCount2"
+	SonyShutterCount3         models.FieldName = "Sony.ShutterCount3"
+	SonyInternalSerialNumber  models.FieldName = "Sony.InternalSerialNumber"
+	SonyInternalSerialNumber2 models.FieldName = "Sony.InternalSerialNumber2"
 
 	// only used internally
-	sony0x9050 exif.FieldName = "Sony.0x9050"
+	sony0x9050 models.FieldName = "Sony.0x9050"
 )
 
-var makerNoteSonyFields = map[uint16]exif.FieldName{
+var makerNoteSonyFields = map[uint16]models.FieldName{
 	0x9050: sony0x9050,
 }
 
-var Sony0x9050Fields = map[uint16]exif.FieldName{}
+var Sony0x9050Fields = map[uint16]models.FieldName{}
 
 type SonyDataType int
 
@@ -45,7 +46,7 @@ const (
 )
 
 type SonyBinaryTag struct {
-	fieldName exif.FieldName
+	fieldName models.FieldName
 	offset    int
 	models    []string
 	dataType  SonyDataType
@@ -190,7 +191,7 @@ var Sony0x9050BinaryTags = []SonyBinaryTag{
 
 // Parse decodes Sony makernote data found in x and adds it to x.
 func (*sony) Parse(x *exif.Exif) error {
-	m, err := x.Get(exif.Model)
+	m, err := x.Get(models.Model)
 	if err != nil {
 		return nil
 	}
@@ -198,7 +199,7 @@ func (*sony) Parse(x *exif.Exif) error {
 	if err != nil {
 		return nil
 	}
-	m, err = x.Get(exif.Make)
+	m, err = x.Get(models.Make)
 	if err != nil {
 		return nil
 	}
@@ -209,7 +210,7 @@ func (*sony) Parse(x *exif.Exif) error {
 	if mk != "SONY" && mk != "HASSELBLAD" {
 		return nil
 	}
-	m, err = x.Get(exif.MakerNote)
+	m, err = x.Get(models.MakerNote)
 	if err != nil {
 		return nil
 	}

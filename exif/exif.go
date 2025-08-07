@@ -16,6 +16,7 @@ import (
 	"time"
 
 	heif "github.com/jdeng/goheif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -39,10 +40,6 @@ type DecodeOptions struct {
 
 const (
 	jpegAPP1 = 0xE1
-
-	exifPointer    = 0x8769
-	gpsPointer     = 0x8825
-	interopPointer = 0xA005
 )
 
 // A decodeError is returned when the image cannot be decoded as a tiff image.
@@ -65,7 +62,7 @@ func IsShortReadTagValueError(err error) bool {
 
 // A TagNotPresentError is returned when the requested field is not
 // present in the EXIF.
-type TagNotPresentError FieldName
+type TagNotPresentError models.FieldName
 
 func (tag TagNotPresentError) Error() string {
 	return fmt.Sprintf("exif: tag %q is not present", string(tag))
@@ -167,23 +164,23 @@ func (p *parser) Parse(x *Exif) error {
 		return errors.New("invalid exif data")
 	}
 	keepUnknown := x.opts.KeepUnknownTags
-	x.LoadTags(x.Tiff.Dirs[0], exifFields, keepUnknown)
+	x.LoadTags(x.Tiff.Dirs[0], models.ExifFields, keepUnknown)
 
 	// thumbnails
 	if len(x.Tiff.Dirs) >= 2 {
-		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, keepUnknown)
+		x.LoadTags(x.Tiff.Dirs[1], models.ThumbnailFields, keepUnknown)
 	}
 
 	te := make(tiffErrors)
 
 	// recurse into exif, gps, and interop sub-IFDs
-	if err := x.loadSubDir(ExifIFDPointer, exifFields); err != nil {
+	if err := x.loadSubDir(models.ExifIFDPointer, models.ExifFields); err != nil {
 		te[loadExif] = err.Error()
 	}
-	if err := x.loadSubDir(GPSInfoIFDPointer, gpsFields); err != nil {
+	if err := x.loadSubDir(models.GPSInfoIFDPointer, models.GpsFields); err != nil {
 		te[loadGPS] = err.Error()
 	}
-	if err := x.loadSubDir(InteroperabilityIFDPointer, interopFields); err != nil {
+	if err := x.loadSubDir(models.InteroperabilityIFDPointer, models.InteropFields); err != nil {
 		te[loadInteroperability] = err.Error()
 	}
 	if len(te) > 0 {
@@ -192,7 +189,7 @@ func (p *parser) Parse(x *Exif) error {
 	return nil
 }
 
-func (x *Exif) loadSubDir(ptr FieldName, fieldMap map[uint16]FieldName) error {
+func (x *Exif) loadSubDir(ptr models.FieldName, fieldMap map[uint16]models.FieldName) error {
 	r := bytes.NewReader(x.Raw)
 
 	tag, err := x.Get(ptr)
@@ -219,7 +216,7 @@ func (x *Exif) loadSubDir(ptr FieldName, fieldMap map[uint16]FieldName) error {
 // Exif provides access to decoded EXIF metadata fields and values.
 type Exif struct {
 	Tiff *tiff.Tiff
-	main map[FieldName]*tiff.Tag
+	main map[models.FieldName]*tiff.Tag
 	Raw  []byte
 	opts DecodeOptions
 }
@@ -395,7 +392,7 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 
 	// Build EXIF structure
 	x := &Exif{
-		main: map[FieldName]*tiff.Tag{},
+		main: map[models.FieldName]*tiff.Tag{},
 		Tiff: tif,
 		Raw:  raw,
 		opts: *opts,
@@ -421,14 +418,14 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 // other meta-data.  If showMissing is true, tags in d that are not in the
 // fieldMap will be loaded with the FieldName UnknownPrefix followed by the
 // tag ID (in hex format).
-func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]FieldName, showMissing bool) {
+func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]models.FieldName, showMissing bool) {
 	for _, tag := range d.Tags {
 		name := fieldMap[tag.Id]
 		if name == "" {
 			if !showMissing {
 				continue
 			}
-			name = FieldName(fmt.Sprintf("%v%x", UnknownPrefix, tag.Id))
+			name = models.FieldName(fmt.Sprintf("%v%x", models.UnknownPrefix, tag.Id))
 		}
 		x.main[name] = tag
 	}
@@ -438,7 +435,7 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]FieldName, showMissing 
 //
 // If the tag is not known or not present, an error is returned. If the
 // tag name is known, the error will be a TagNotPresentError.
-func (x *Exif) Get(name FieldName) (*tiff.Tag, error) {
+func (x *Exif) Get(name models.FieldName) (*tiff.Tag, error) {
 	if tg, ok := x.main[name]; ok {
 		return tg, nil
 	}
@@ -446,7 +443,7 @@ func (x *Exif) Get(name FieldName) (*tiff.Tag, error) {
 }
 
 // Update -- Illegal
-func (x *Exif) Update(name FieldName, tag *tiff.Tag) error {
+func (x *Exif) Update(name models.FieldName, tag *tiff.Tag) error {
 	if _, ok := x.main[name]; ok {
 		x.main[name] = tag
 		return nil
@@ -458,7 +455,7 @@ func (x *Exif) Update(name FieldName, tag *tiff.Tag) error {
 type Walker interface {
 	// Walk is called for each non-nil EXIF field. Returning a non-nil
 	// error aborts the walk/traversal.
-	Walk(name FieldName, tag *tiff.Tag) error
+	Walk(name models.FieldName, tag *tiff.Tag) error
 }
 
 // Walk calls the Walk method of w with the name and tag for every non-nil
@@ -481,12 +478,12 @@ func (x *Exif) Walk(w Walker) error {
 //
 // If the EXIF lacks timezone information or GPS time, the returned
 // time's Location will be time.Local.
-func (x *Exif) DateTime(fields ...FieldName) (time.Time, error) {
+func (x *Exif) DateTime(fields ...models.FieldName) (time.Time, error) {
 	var dt time.Time
 	var tag *tiff.Tag
 	var err error
 	if len(fields) == 0 {
-		fields = append(fields, DateTimeOriginal, DateTime)
+		fields = append(fields, models.DateTimeOriginal, models.DateTime)
 	}
 	for _, f := range fields {
 		tag, err = x.Get(f)
@@ -503,7 +500,7 @@ func (x *Exif) DateTime(fields ...FieldName) (time.Time, error) {
 
 	exifTimeLayout := "2006:01:02 15:04:05"
 	dateStr := strings.TrimRight(string(tag.Val), "\x00")
-	subSecTag, err := x.Get(SubSecTimeOriginal)
+	subSecTag, err := x.Get(models.SubSecTimeOriginal)
 	if err == nil {
 		subSec, err := subSecTag.StringVal()
 		if err == nil {
@@ -641,7 +638,7 @@ func tagDegrees(tag *tiff.Tag) (float64, error) {
 
 // parseGPSCoordinate extracts and parses a GPS coordinate (latitude or longitude)
 // from the given coordinate and reference tags.
-func (x *Exif) parseGPSCoordinate(coordTag, refTag FieldName, coordName string) (float64, error) {
+func (x *Exif) parseGPSCoordinate(coordTag, refTag models.FieldName, coordName string) (float64, error) {
 	// Get the coordinate tag
 	tag, err := x.Get(coordTag)
 	if err != nil {
@@ -676,12 +673,12 @@ func (x *Exif) parseGPSCoordinate(coordTag, refTag FieldName, coordName string) 
 
 // parseGPSLatitude extracts and parses GPS latitude from EXIF data.
 func (x *Exif) parseGPSLatitude() (float64, error) {
-	return x.parseGPSCoordinate(FieldName("GPSLatitude"), FieldName("GPSLatitudeRef"), "latitude")
+	return x.parseGPSCoordinate(models.FieldName("GPSLatitude"), models.FieldName("GPSLatitudeRef"), "latitude")
 }
 
 // parseGPSLongitude extracts and parses GPS longitude from EXIF data.
 func (x *Exif) parseGPSLongitude() (float64, error) {
-	return x.parseGPSCoordinate(FieldName("GPSLongitude"), FieldName("GPSLongitudeRef"), "longitude")
+	return x.parseGPSCoordinate(models.FieldName("GPSLongitude"), models.FieldName("GPSLongitudeRef"), "longitude")
 }
 
 // LatLong returns the latitude and longitude of the photo and
@@ -712,7 +709,7 @@ func (x *Exif) String() string {
 // JpegThumbnail returns the jpeg thumbnail if it exists. If it doesn't exist,
 // TagNotPresentError will be returned
 func (x *Exif) JpegThumbnail() (int64, int64, error) {
-	offset, err := x.Get(ThumbJPEGInterchangeFormat)
+	offset, err := x.Get(models.ThumbJPEGInterchangeFormat)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -721,7 +718,7 @@ func (x *Exif) JpegThumbnail() (int64, int64, error) {
 		return 0, 0, err
 	}
 
-	length, err := x.Get(ThumbJPEGInterchangeFormatLength)
+	length, err := x.Get(models.ThumbJPEGInterchangeFormatLength)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -857,7 +854,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 
 	// build an exif structure from the tiff
 	x = &Exif{
-		main: map[FieldName]*tiff.Tag{},
+		main: map[models.FieldName]*tiff.Tag{},
 		Tiff: tif,
 		Raw:  raw,
 		opts: *opts,

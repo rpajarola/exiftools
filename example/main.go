@@ -12,6 +12,7 @@ import (
 	"github.com/TylerBrock/colorjson"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/mknote"
 	"github.com/rpajarola/exiftools/xmp"
 )
@@ -87,33 +88,33 @@ func (m *Metadata) exifMetadata(f *os.File) error {
 
 	m.Exif.DateTimeOriginal, _ = x.DateTime()
 
-	m.Exif.FocalLength, _ = x.FocalLength(exif.FocalLength)
+	m.Exif.FocalLength, _ = x.FocalLength(models.FocalLength)
 
-	m.Exif.FocalLengthEqv, _ = x.FocalLength(exif.FocalLengthIn35mmFilm)
+	m.Exif.FocalLengthEqv, _ = x.FocalLength(models.FocalLengthIn35mmFilm)
 	m.Exif.ExposureMode, _ = x.GetExposureMode()
 	m.Exif.MeteringMode, _ = x.GetMeteringMode()
 	m.Exif.Flash, _ = x.GetFlashMode()
 
 	// Image Size
-	m.Exif.ImageHeight, _ = x.GetUints(exif.ImageLength, exif.PixelYDimension)
+	m.Exif.ImageHeight, _ = x.GetUints(models.ImageLength, models.PixelYDimension)
 	//if err != nil {
 	//	fmt.Println("Error", err)
 	//}
-	m.Exif.ImageWidth, _ = x.GetUints(exif.ImageWidth, exif.PixelXDimension)
+	m.Exif.ImageWidth, _ = x.GetUints(models.ImageWidth, models.PixelXDimension)
 	//if err != nil {
 	//	fmt.Println("Error", err)
 	//}
 	//m.Exif.ImageWidth, m.Exif.ImageHeight = x.GetImageSize()
-	m.Exif.CameraMake, _ = x.GetString(exif.Make)
-	m.Exif.CameraModel, _ = x.GetString(exif.Model)
-	m.Exif.CameraSerial, _ = x.GetString(exif.SerialNumber)
-	m.Exif.Artist, _ = x.GetString(exif.Artist)
-	m.Exif.Copyright, _ = x.GetString(exif.Copyright)
-	m.Exif.Software, _ = x.GetString(exif.Software)
-	m.Exif.ImageDescription, _ = x.GetString(exif.ImageDescription)
+	m.Exif.CameraMake, _ = x.GetString(models.Make)
+	m.Exif.CameraModel, _ = x.GetString(models.Model)
+	m.Exif.CameraSerial, _ = x.GetString(models.SerialNumber)
+	m.Exif.Artist, _ = x.GetString(models.Artist)
+	m.Exif.Copyright, _ = x.GetString(models.Copyright)
+	m.Exif.Software, _ = x.GetString(models.Software)
+	m.Exif.ImageDescription, _ = x.GetString(models.ImageDescription)
 	m.Exif.Orientation, _ = x.GetOrientation()
-	m.Exif.LensModel, _ = x.GetString(exif.LensModel)
-	m.Exif.LensSerial, _ = x.GetString(exif.LensSerialNumber)
+	m.Exif.LensModel, _ = x.GetString(models.LensModel)
+	m.Exif.LensSerial, _ = x.GetString(models.LensSerialNumber)
 
 	m.Exif.ISOSpeed, _ = x.GetISOSpeed()
 	m.Exif.Aperture, _ = x.GetAperture()

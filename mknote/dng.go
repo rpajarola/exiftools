@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
 
@@ -22,23 +23,23 @@ var (
 
 // SubIfd-specific fields
 var (
-	SubfileType        exif.FieldName = "SubfileType"
-	ImageWidth         exif.FieldName = "Width"
-	ImageLength        exif.FieldName = "ImageLength"
-	Compression        exif.FieldName = "Compression"
-	JpgFromRawStart    exif.FieldName = "JpgFromRawStart"
-	JpgFromRawLength   exif.FieldName = "JpgFromRawLength"
-	PreviewImageStart  exif.FieldName = "PreviewImageStart"
-	PreviewImageLength exif.FieldName = "PreviewImageLength"
-	PreviewColorSpace  exif.FieldName = "PreviewColorSpace"
-	PreviewDateTime    exif.FieldName = "PreviewDateTime"
+	SubfileType        models.FieldName = "SubfileType"
+	ImageWidth         models.FieldName = "Width"
+	ImageLength        models.FieldName = "ImageLength"
+	Compression        models.FieldName = "Compression"
+	JpgFromRawStart    models.FieldName = "JpgFromRawStart"
+	JpgFromRawLength   models.FieldName = "JpgFromRawLength"
+	PreviewImageStart  models.FieldName = "PreviewImageStart"
+	PreviewImageLength models.FieldName = "PreviewImageLength"
+	PreviewColorSpace  models.FieldName = "PreviewColorSpace"
+	PreviewDateTime    models.FieldName = "PreviewDateTime"
 )
 
-func subIfdMap(ifd string, fn exif.FieldName) exif.FieldName {
-	return exif.FieldName(ifd + "." + string(fn))
+func subIfdMap(ifd string, fn models.FieldName) models.FieldName {
+	return models.FieldName(ifd + "." + string(fn))
 }
 
-var SubIFD0Fields = map[uint16]exif.FieldName{
+var SubIFD0Fields = map[uint16]models.FieldName{
 	0x00fe: subIfdMap("SubIfd0", SubfileType),
 	0x0100: subIfdMap("SubIfd0", ImageWidth),
 	0x0101: subIfdMap("SubIfd0", ImageLength),
@@ -49,7 +50,7 @@ var SubIFD0Fields = map[uint16]exif.FieldName{
 	0xc71b: subIfdMap("SubIfd0", PreviewDateTime),
 }
 
-var SubIFD1Fields = map[uint16]exif.FieldName{
+var SubIFD1Fields = map[uint16]models.FieldName{
 	0x00fe: subIfdMap("SubIfd1", SubfileType),
 	0x0100: subIfdMap("SubIfd1", ImageWidth),
 	0x0101: subIfdMap("SubIfd1", ImageLength),
@@ -60,7 +61,7 @@ var SubIFD1Fields = map[uint16]exif.FieldName{
 	0xc71b: subIfdMap("SubIfd1", PreviewDateTime),
 }
 
-var SubIFD2Fields = map[uint16]exif.FieldName{
+var SubIFD2Fields = map[uint16]models.FieldName{
 	0x00fe: subIfdMap("SubIfd2", SubfileType),
 	0x0100: subIfdMap("SubIfd2", ImageWidth),
 	0x0101: subIfdMap("SubIfd2", ImageLength),
@@ -73,14 +74,14 @@ var SubIFD2Fields = map[uint16]exif.FieldName{
 
 // Parse decodes all Adobe DNG subIFDS found in x and adds it to x.
 func (*adobeDNG) Parse(x *exif.Exif) error {
-	m, err := x.Get(exif.SubIfdsPointer)
+	m, err := x.Get(models.SubIfdsPointer)
 	if err != nil {
 		return nil
 	}
 	if !(m.Count > 0) {
 		return nil
 	}
-	subIfds := []map[uint16]exif.FieldName{
+	subIfds := []map[uint16]models.FieldName{
 		SubIFD0Fields,
 		SubIFD1Fields,
 		SubIFD2Fields,
@@ -93,11 +94,11 @@ func (*adobeDNG) Parse(x *exif.Exif) error {
 		}
 		_, err = r.Seek(offset, 0)
 		if err != nil {
-			return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", exif.SubIfdsPointer, err)
+			return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", models.SubIfdsPointer, err)
 		}
 		subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
 		if err != nil {
-			return fmt.Errorf("exif: sub-IFD %s decode failed: %v", exif.SubIfdsPointer, err)
+			return fmt.Errorf("exif: sub-IFD %s decode failed: %v", models.SubIfdsPointer, err)
 		}
 		x.LoadTags(subDir, sub, false)
 	}

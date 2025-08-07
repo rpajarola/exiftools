@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/rpajarola/exiftools/exif"
+	"github.com/rpajarola/exiftools/models"
 	_ "github.com/rpajarola/exiftools/mknote"
 	"github.com/rpajarola/exiftools/tiff"
 )
@@ -29,14 +30,14 @@ func main() {
 		return
 	}
 
-	x.Walk(walkFunc(func(name exif.FieldName, tag *tiff.Tag) error {
+	x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 		fmt.Printf("%v: %v\n", name, tag.String())
 		return nil
 	}))
 }
 
-type walkFunc func(exif.FieldName, *tiff.Tag) error
+type walkFunc func(models.FieldName, *tiff.Tag) error
 
-func (f walkFunc) Walk(name exif.FieldName, tag *tiff.Tag) error {
+func (f walkFunc) Walk(name models.FieldName, tag *tiff.Tag) error {
 	return f(name, tag)
 }

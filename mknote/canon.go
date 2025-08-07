@@ -17,24 +17,24 @@ type canon struct{}
 
 // Canon-specific fields
 var (
-	CanonCameraSettings   exif.FieldName = "Canon.CameraSettings" // A sub-IFD
-	CanonShotInfo         exif.FieldName = "Canon.ShotInfo"       // A sub-IFD
-	CanonAFInfo           exif.FieldName = "Canon.AFInfo"
-	CanonTimeInfo         exif.FieldName = "Canon.TimeInfo"
-	CanonFileInfo         exif.FieldName = "Canon.FileInfo"
-	CanonImageType        exif.FieldName = "Canon.ImageType"
-	CanonPreviewImageInfo exif.FieldName = "Canon.PreviewImageInfo"
-	CanonSerialNumber     exif.FieldName = "Canon.SerialNumber"
-	Canon0x0000           exif.FieldName = "Canon.0x0000"
-	Canon0x0003           exif.FieldName = "Canon.0x0003"
-	Canon0x00b5           exif.FieldName = "Canon.0x00b5"
-	Canon0x00c0           exif.FieldName = "Canon.0x00c0"
-	Canon0x00c1           exif.FieldName = "Canon.0x00c1"
-	CanonImageUniqueID    exif.FieldName = "Canon.ImageUniqueID"
-	CanonFocalLength      exif.FieldName = "Canon.FocalLength"
+	CanonCameraSettings   models.FieldName = "Canon.CameraSettings" // A sub-IFD
+	CanonShotInfo         models.FieldName = "Canon.ShotInfo"       // A sub-IFD
+	CanonAFInfo           models.FieldName = "Canon.AFInfo"
+	CanonTimeInfo         models.FieldName = "Canon.TimeInfo"
+	CanonFileInfo         models.FieldName = "Canon.FileInfo"
+	CanonImageType        models.FieldName = "Canon.ImageType"
+	CanonPreviewImageInfo models.FieldName = "Canon.PreviewImageInfo"
+	CanonSerialNumber     models.FieldName = "Canon.SerialNumber"
+	Canon0x0000           models.FieldName = "Canon.0x0000"
+	Canon0x0003           models.FieldName = "Canon.0x0003"
+	Canon0x00b5           models.FieldName = "Canon.0x00b5"
+	Canon0x00c0           models.FieldName = "Canon.0x00c0"
+	Canon0x00c1           models.FieldName = "Canon.0x00c1"
+	CanonImageUniqueID    models.FieldName = "Canon.ImageUniqueID"
+	CanonFocalLength      models.FieldName = "Canon.FocalLength"
 )
 
-var makerNoteCanonFields = map[uint16]exif.FieldName{
+var makerNoteCanonFields = map[uint16]models.FieldName{
 	0x0000: Canon0x0000,
 	0x0001: CanonCameraSettings,
 	0x0002: CanonFocalLength,
@@ -65,7 +65,7 @@ var makerNoteCanonFields = map[uint16]exif.FieldName{
 	0x0099: CustomFunctions,
 	0x00a0: ProcessingInfo,
 	0x00aa: MeasuredColor,
-	0x00b4: exif.ColorSpace,
+	0x00b4: models.ColorSpace,
 	0x00b5: Canon0x00b5,
 	0x00b6: CanonPreviewImageInfo,
 	0x00c0: Canon0x00c0,
@@ -303,13 +303,13 @@ func (cr *CanonRaw) timezone(x *exif.Exif) error {
 
 // Parse decodes all Canon makernote data found in x and adds it to x.
 func (*canon) Parse(x *exif.Exif) error {
-	m, err := x.Get(exif.MakerNote)
+	m, err := x.Get(models.MakerNote)
 	if err != nil {
 		return nil
 	}
 
-	// Confirm that exif.Make is Canon
-	if mk, err := x.Get(exif.Make); err != nil {
+	// Confirm that models.Make is Canon
+	if mk, err := x.Get(models.Make); err != nil {
 		return err
 	} else {
 		if val, err := mk.StringVal(); err != nil || val != "Canon" {

@@ -16,16 +16,16 @@ func (x *Exif) GetImageSize() (uint, uint) {
 	var w, l *tiff.Tag
 
 	// Get Width Tag, if error check Pixel Dimension Tag
-	w, err = x.Get(ImageWidth)
+	w, err = x.Get(models.ImageWidth)
 	if err != nil {
-		w, err = x.Get(PixelXDimension)
+		w, err = x.Get(models.PixelXDimension)
 		if err != nil {
 			return 0, 0
 		}
-		l, _ = x.Get(PixelYDimension)
+		l, _ = x.Get(models.PixelYDimension)
 
 	} else {
-		l, _ = x.Get(ImageLength)
+		l, _ = x.Get(models.ImageLength)
 	}
 	width, _ := w.Int(0)
 	length, _ := l.Int(0)
@@ -35,7 +35,7 @@ func (x *Exif) GetImageSize() (uint, uint) {
 // GetOrientation - Get Image Orientation from Exif
 // (Orientation) Tag
 func (x *Exif) GetOrientation() (models.Orientation, error) {
-	i, err := x.Get(Orientation)
+	i, err := x.Get(models.OrientationTag)
 	if err != nil {
 		return 1, err
 	}
@@ -46,7 +46,7 @@ func (x *Exif) GetOrientation() (models.Orientation, error) {
 // GetFlashMode - Get Flash mode from Exif
 // (Flash) Tag
 func (x *Exif) GetFlashMode() (models.FlashMode, error) {
-	tag, err := x.Get(Flash)
+	tag, err := x.Get(models.Flash)
 	if err != nil {
 		return models.NoFlashFired, err
 	}
@@ -59,7 +59,7 @@ func (x *Exif) GetFlashMode() (models.FlashMode, error) {
 
 // GetExposureBias - Get Exposure Bias from Exposure Bias Value Tag
 func (x *Exif) GetExposureBias() (models.ExposureBias, error) {
-	e, err := x.Get(ExposureBiasValue)
+	e, err := x.Get(models.ExposureBiasValue)
 	if err != nil {
 		return models.NewExposureBias(0, 0), err
 	}
@@ -70,7 +70,7 @@ func (x *Exif) GetExposureBias() (models.ExposureBias, error) {
 // GetAperture - Get Aperture from Exif
 // (FNumber) tag
 func (x *Exif) GetAperture() (float32, error) {
-	a, err := x.Get(FNumber)
+	a, err := x.Get(models.FNumber)
 	if err != nil {
 		return 0.0, err
 	}
@@ -84,7 +84,7 @@ func (x *Exif) GetAperture() (float32, error) {
 // GetISOSpeed - Get ISO from Exif
 // (ISOSpeedRatings) tag
 func (x *Exif) GetISOSpeed() (int, error) {
-	a, err := x.Get(ISOSpeedRatings)
+	a, err := x.Get(models.ISOSpeedRatings)
 	if err != nil {
 		return 0, err
 	}
@@ -97,7 +97,7 @@ func (x *Exif) GetISOSpeed() (int, error) {
 
 // GetShutterSpeed - Get ShutterSpeed from ExposureTime Tag
 func (x *Exif) GetShutterSpeed() (models.ShutterSpeed, error) {
-	a, err := x.Get(ExposureTime)
+	a, err := x.Get(models.ExposureTime)
 	if err != nil {
 		return models.NewShutterSpeed(0, 0), err
 	}
@@ -110,7 +110,7 @@ func (x *Exif) GetShutterSpeed() (models.ShutterSpeed, error) {
 
 // GetMeteringMode - Get Metering Mode from MeteringMode Exif Tag
 func (x *Exif) GetMeteringMode() (models.MeteringMode, error) {
-	tag, err := x.Get(MeteringMode)
+	tag, err := x.Get(models.MeteringModeTag)
 	if err != nil {
 		return models.UnknownMeteringMode, err
 	}
@@ -123,7 +123,7 @@ func (x *Exif) GetMeteringMode() (models.MeteringMode, error) {
 
 // GetExposureMode - Get Exposure Mode from ExposureProgram Exif Tag
 func (x *Exif) GetExposureMode() (models.ExposureMode, error) {
-	tag, err := x.Get(ExposureProgram)
+	tag, err := x.Get(models.ExposureProgram)
 	if err != nil {
 		return models.UnkownExposureMode, err
 	}
@@ -135,7 +135,7 @@ func (x *Exif) GetExposureMode() (models.ExposureMode, error) {
 }
 
 // GetString - Convenience function for getting String from tagLabel
-func (x *Exif) GetString(tagLabel FieldName) (string, error) {
+func (x *Exif) GetString(tagLabel models.FieldName) (string, error) {
 	a, err := x.Get(tagLabel)
 	if err != nil {
 		return "", err
@@ -150,7 +150,7 @@ func (x *Exif) GetString(tagLabel FieldName) (string, error) {
 }
 
 // GetStrings -
-func (x *Exif) GetStrings(fields ...FieldName) (string, error) {
+func (x *Exif) GetStrings(fields ...models.FieldName) (string, error) {
 	var err error
 	var ok bool
 	var a *tiff.Tag
@@ -171,7 +171,7 @@ func (x *Exif) GetStrings(fields ...FieldName) (string, error) {
 }
 
 // GetUints - Get Unsigned Ints from fieldNames
-func (x *Exif) GetUints(fields ...FieldName) (uint, error) {
+func (x *Exif) GetUints(fields ...models.FieldName) (uint, error) {
 	var err error
 	var ok bool
 	var a *tiff.Tag
@@ -189,12 +189,12 @@ func (x *Exif) GetUints(fields ...FieldName) (uint, error) {
 
 // GPSAltitude - Convenience function for getting GPSAltitude
 func (x *Exif) GPSAltitude() (float32, error) {
-	alt, err := x.Get(GPSAltitude)
+	alt, err := x.Get(models.GPSAltitude)
 	if err != nil {
 		return 0, err
 	}
 
-	altRef, err := x.Get(GPSAltitudeRef)
+	altRef, err := x.Get(models.GPSAltitudeRef)
 	if err != nil {
 		return 0, err
 	}
@@ -227,11 +227,11 @@ func calcTimeHelper(n int64, d int64, _ error) string {
 // GPSTimeStamp - Convenience function for getting GPS Timestamp
 func (x *Exif) GPSTimeStamp() (time.Time, error) {
 	var dt time.Time
-	dS, err := x.Get(GPSDateStamp)
+	dS, err := x.Get(models.GPSDateStamp)
 	if err != nil {
 		return dt, err
 	}
-	tS, err := x.Get(GPSTimeStamp)
+	tS, err := x.Get(models.GPSTimeStamp)
 	if err != nil {
 		return dt, err
 	}
@@ -258,7 +258,7 @@ func (x *Exif) GPSTimeStamp() (time.Time, error) {
 }
 
 // FocalLength - Convenience function for getting Lens Focal Length
-func (x *Exif) FocalLength(fn FieldName) (fl float32, err error) {
+func (x *Exif) FocalLength(fn models.FieldName) (fl float32, err error) {
 	tag, err := x.Get(fn)
 	if err != nil {
 		err = fmt.Errorf("cannot parse Focal Length: %v", err)

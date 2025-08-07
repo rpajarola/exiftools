@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/rpajarola/exiftools/models"
 )
 
 func TestDecodeExample(t *testing.T) {
@@ -23,14 +25,14 @@ func TestDecodeExample(t *testing.T) {
 	}
 
 	// Test camera model retrieval
-	if camModel, err := x.Get(Model); err == nil {
+	if camModel, err := x.Get(models.Model); err == nil {
 		if model, err := camModel.StringVal(); err == nil {
 			t.Logf("Camera model: %s", model)
 		}
 	}
 
 	// Test focal length retrieval
-	if focal, err := x.Get(FocalLength); err == nil {
+	if focal, err := x.Get(models.FocalLength); err == nil {
 		if numer, denom, err := focal.Rat2(0); err == nil {
 			t.Logf("Focal length: %v/%v", numer, denom)
 		}
@@ -86,13 +88,13 @@ func TestDecodeWithParseHeaderExample(t *testing.T) {
 	}
 
 	// Test same functionality as basic Decode
-	if camModel, err := x.Get(Model); err == nil {
+	if camModel, err := x.Get(models.Model); err == nil {
 		if model, err := camModel.StringVal(); err == nil {
 			t.Logf("Camera model: %s", model)
 		}
 	}
 
-	if focal, err := x.Get(FocalLength); err == nil {
+	if focal, err := x.Get(models.FocalLength); err == nil {
 		if numer, denom, err := focal.Rat2(0); err == nil {
 			t.Logf("Focal length: %v/%v", numer, denom)
 		}
