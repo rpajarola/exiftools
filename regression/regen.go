@@ -63,7 +63,7 @@ func makeExpected(files []string, w io.Writer) {
 			continue
 		}
 
-		x, err := exif.Decode(f)
+		x, err := exif.DecodeWithParseHeader(f)
 		if err != nil {
 			fmt.Printf("decode %v: %v\n", name, err)
 			f.Close()
