@@ -44,6 +44,9 @@ type Exif struct {
 }
 
 func New(tif *tiff.Tiff, raw []byte, opts *DecodeOptions) *Exif {
+	if tif == nil {
+		tif = &tiff.Tiff{Order: binary.LittleEndian}
+	}
 	if opts == nil {
 		opts = &DecodeOptions{}
 	}
