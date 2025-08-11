@@ -155,7 +155,7 @@ func (x *Exif) GetStrings(fields ...models.FieldName) (string, error) {
 	var ok bool
 	var a *tiff.Tag
 	for _, field := range fields {
-		if a, ok = x.main[field]; ok {
+		if a, ok = x.Fields[field]; ok {
 			break
 		}
 	}
@@ -176,7 +176,7 @@ func (x *Exif) GetUints(fields ...models.FieldName) (uint, error) {
 	var ok bool
 	var a *tiff.Tag
 	for _, field := range fields {
-		if a, ok = x.main[field]; ok {
+		if a, ok = x.Fields[field]; ok {
 			break
 		}
 	}

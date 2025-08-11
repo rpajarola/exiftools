@@ -2,7 +2,7 @@ package exif
 
 import (
 	"fmt"
-	
+
 	"github.com/rpajarola/exiftools/models"
 )
 

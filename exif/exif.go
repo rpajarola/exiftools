@@ -20,205 +20,39 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
-// ExifLengthCutoff limits the exif size to avoid trying to read corrupted lengths and parsing potentially gigabytes of exif
-var ExifLengthCutoff = 4 * 1024 * 1024
-
-// Exif Errors
-var (
-	ErrNoExif          = errors.New("no exif data")
-	ErrExifHeaderError = errors.New("exif header error")
-)
-
-// Deprecated: Use DecodeOptions.KeepUnknownTags instead
-var KeepUnknownTags = false
-
 // DecodeOptions provides configuration options for EXIF decoding
 type DecodeOptions struct {
-	KeepUnknownTags bool
-	MaxExifSize     int
+	KeepUnknownTags bool // Keep unknown tags (default: false)
+	MaxExifSize     int  // maximum size of exif data (default: 4MB)
 }
 
 const (
+	// JPEG APP1 section marker
 	jpegAPP1 = 0xE1
+
+	// limits the exif size to avoid trying to read corrupted lengths
+	// and parsing potentially gigabytes of exif
+	exifLengthCutoff = 4 * 1024 * 1024
 )
-
-// A decodeError is returned when the image cannot be decoded as a tiff image.
-type decodeError struct {
-	cause error
-}
-
-func (de decodeError) Error() string {
-	return fmt.Sprintf("exif: decode failed (%v) ", de.cause.Error())
-}
-
-// IsShortReadTagValueError identifies a ErrShortReadTagValue error.
-func IsShortReadTagValueError(err error) bool {
-	de, ok := err.(decodeError)
-	if ok {
-		return de.cause == tiff.ErrShortReadTagValue
-	}
-	return false
-}
-
-// A TagNotPresentError is returned when the requested field is not
-// present in the EXIF.
-type TagNotPresentError models.FieldName
-
-func (tag TagNotPresentError) Error() string {
-	return fmt.Sprintf("exif: tag %q is not present", string(tag))
-}
-
-// IsTagNotPresentError -
-func IsTagNotPresentError(err error) bool {
-	_, ok := err.(TagNotPresentError)
-	return ok
-}
-
-// Parser allows the registration of custom parsing and field loading
-// in the Decode function.
-type Parser interface {
-	// Parse should read data from x and insert parsed fields into x via
-	// LoadTags.
-	Parse(x *Exif) error
-}
-
-var parsers []Parser
-
-func init() {
-	RegisterParsers(&parser{})
-}
-
-// RegisterParsers registers one or more parsers to be automatically called
-// when decoding EXIF data via the Decode function.
-func RegisterParsers(ps ...Parser) {
-	parsers = append(parsers, ps...)
-}
-
-type parser struct{}
-
-type tiffErrors map[tiffError]string
-
-func (te tiffErrors) Error() string {
-	var allErrors []string
-	for k, v := range te {
-		allErrors = append(allErrors, fmt.Sprintf("%s: %v\n", stagePrefix[k], v))
-	}
-	return strings.Join(allErrors, "\n")
-}
-
-// IsCriticalError - given the error returned by Decode, reports whether the
-// returned *Exif may contain usable information.
-func IsCriticalError(err error) bool {
-	_, ok := err.(tiffErrors)
-	return !ok
-}
-
-// IsExifError reports whether the error happened while decoding the EXIF
-// sub-IFD.
-func IsExifError(err error) bool {
-	if te, ok := err.(tiffErrors); ok {
-		_, isExif := te[loadExif]
-		return isExif
-	}
-	return false
-}
-
-// IsGPSError reports whether the error happened while decoding the GPS sub-IFD.
-func IsGPSError(err error) bool {
-	if te, ok := err.(tiffErrors); ok {
-		_, isGPS := te[loadGPS]
-		return isGPS
-	}
-	return false
-}
-
-// IsInteroperabilityError reports whether the error happened while decoding the
-// Interoperability sub-IFD.
-func IsInteroperabilityError(err error) bool {
-	if te, ok := err.(tiffErrors); ok {
-		_, isInterop := te[loadInteroperability]
-		return isInterop
-	}
-	return false
-}
-
-type tiffError int
-
-const (
-	loadExif tiffError = iota
-	loadGPS
-	loadInteroperability
-)
-
-var stagePrefix = map[tiffError]string{
-	loadExif:             "loading EXIF sub-IFD",
-	loadGPS:              "loading GPS sub-IFD",
-	loadInteroperability: "loading Interoperability sub-IFD",
-}
-
-// Parse reads data from the tiff data in x and populates the tags
-// in x. If parsing a sub-IFD fails, the error is recorded and
-// parsing continues with the remaining sub-IFDs.
-func (p *parser) Parse(x *Exif) error {
-	if len(x.Tiff.Dirs) == 0 {
-		return errors.New("invalid exif data")
-	}
-	keepUnknown := x.opts.KeepUnknownTags
-	x.LoadTags(x.Tiff.Dirs[0], models.ExifFields, keepUnknown)
-
-	// thumbnails
-	if len(x.Tiff.Dirs) >= 2 {
-		x.LoadTags(x.Tiff.Dirs[1], models.ThumbnailFields, keepUnknown)
-	}
-
-	te := make(tiffErrors)
-
-	// recurse into exif, gps, and interop sub-IFDs
-	if err := x.loadSubDir(models.ExifIFDPointer, models.ExifFields); err != nil {
-		te[loadExif] = err.Error()
-	}
-	if err := x.loadSubDir(models.GPSInfoIFDPointer, models.GpsFields); err != nil {
-		te[loadGPS] = err.Error()
-	}
-	if err := x.loadSubDir(models.InteroperabilityIFDPointer, models.InteropFields); err != nil {
-		te[loadInteroperability] = err.Error()
-	}
-	if len(te) > 0 {
-		return te
-	}
-	return nil
-}
-
-func (x *Exif) loadSubDir(ptr models.FieldName, fieldMap map[uint16]models.FieldName) error {
-	r := bytes.NewReader(x.Raw)
-
-	tag, err := x.Get(ptr)
-	if err != nil {
-		return nil
-	}
-	offset, err := tag.Int64(0)
-	if err != nil {
-		return nil
-	}
-
-	_, err = r.Seek(offset, 0)
-	if err != nil {
-		return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", ptr, err)
-	}
-	subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
-	if err != nil {
-		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
-	}
-	x.LoadTags(subDir, fieldMap, x.opts.KeepUnknownTags)
-	return nil
-}
 
 // Exif provides access to decoded EXIF metadata fields and values.
 type Exif struct {
 	Tiff *tiff.Tiff
-	main map[models.FieldName]*tiff.Tag
+	Fields map[models.FieldName]*tiff.Tag
 	Raw  []byte
 	opts DecodeOptions
+}
+
+func New(tif *tiff.Tiff, raw []byte, opts *DecodeOptions) *Exif {
+	if opts == nil {
+		opts = &DecodeOptions{}
+	}
+	return &Exif{
+		Fields: map[models.FieldName]*tiff.Tag{},
+		Tiff: tif,
+		Raw:  raw,
+		opts: *opts,
+	}
 }
 
 // Decode parses EXIF data from r (a TIFF, JPEG, or raw EXIF block)
@@ -230,7 +64,7 @@ type Exif struct {
 // The error can be inspected with functions such as IsCriticalError
 // to determine whether the returned object might still be usable.
 func Decode(r io.Reader) (*Exif, error) {
-	return DecodeWithOptions(r, &DecodeOptions{KeepUnknownTags: KeepUnknownTags})
+	return DecodeWithOptions(r, &DecodeOptions{KeepUnknownTags: false})
 }
 
 // fileType represents the detected file format
@@ -337,7 +171,7 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 		opts = &DecodeOptions{}
 	}
 	if opts.MaxExifSize <= 0 {
-		opts.MaxExifSize = ExifLengthCutoff
+		opts.MaxExifSize = exifLengthCutoff
 	}
 
 	// Read header to detect file type
@@ -391,12 +225,7 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	}
 
 	// Build EXIF structure
-	x := &Exif{
-		main: map[models.FieldName]*tiff.Tag{},
-		Tiff: tif,
-		Raw:  raw,
-		opts: *opts,
-	}
+	x := New(tif, raw, opts)
 
 	// Run parsers
 	for i, p := range parsers {
@@ -427,7 +256,7 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]models.FieldName, showM
 			}
 			name = models.FieldName(fmt.Sprintf("%v%x", models.UnknownPrefix, tag.Id))
 		}
-		x.main[name] = tag
+		x.Fields[name] = tag
 	}
 }
 
@@ -436,7 +265,7 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]models.FieldName, showM
 // If the tag is not known or not present, an error is returned. If the
 // tag name is known, the error will be a TagNotPresentError.
 func (x *Exif) Get(name models.FieldName) (*tiff.Tag, error) {
-	if tg, ok := x.main[name]; ok {
+	if tg, ok := x.Fields[name]; ok {
 		return tg, nil
 	}
 	return nil, TagNotPresentError(name)
@@ -444,8 +273,8 @@ func (x *Exif) Get(name models.FieldName) (*tiff.Tag, error) {
 
 // Update -- Illegal
 func (x *Exif) Update(name models.FieldName, tag *tiff.Tag) error {
-	if _, ok := x.main[name]; ok {
-		x.main[name] = tag
+	if _, ok := x.Fields[name]; ok {
+		x.Fields[name] = tag
 		return nil
 	}
 	return TagNotPresentError(name)
@@ -461,7 +290,7 @@ type Walker interface {
 // Walk calls the Walk method of w with the name and tag for every non-nil
 // EXIF field.  If w aborts the walk with an error, that error is returned.
 func (x *Exif) Walk(w Walker) error {
-	for name, tag := range x.main {
+	for name, tag := range x.Fields {
 		if err := w.Walk(name, tag); err != nil {
 			return err
 		}
@@ -644,30 +473,30 @@ func (x *Exif) parseGPSCoordinate(coordTag, refTag models.FieldName, coordName s
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// Get the reference tag (N/S for latitude, E/W for longitude)
 	refTagVal, err := x.Get(refTag)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// Parse the degrees value
 	coord, err := tagDegrees(tag)
 	if err != nil {
 		return 0, fmt.Errorf("cannot parse %s: %v", coordName, err)
 	}
-	
+
 	// Apply the reference direction
 	ref, err := refTagVal.StringVal()
 	if err != nil {
 		return 0, fmt.Errorf("cannot parse %s reference: %v", coordName, err)
 	}
-	
+
 	// Apply negative sign for South/West
 	if ref == "S" || ref == "W" {
 		coord *= -1.0
 	}
-	
+
 	return coord, nil
 }
 
@@ -688,19 +517,19 @@ func (x *Exif) LatLong() (lat, long float64, err error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	
+
 	long, err = x.parseGPSLongitude()
 	if err != nil {
 		return 0, 0, err
 	}
-	
+
 	return lat, long, nil
 }
 
 // String returns a pretty text representation of the decoded exif data.
 func (x *Exif) String() string {
 	var buf bytes.Buffer
-	for name, tag := range x.main {
+	for name, tag := range x.Fields {
 		fmt.Fprintf(&buf, "%s: %s\n", name, tag)
 	}
 	return buf.String()
@@ -734,7 +563,7 @@ func (x *Exif) JpegThumbnail() (int64, int64, error) {
 // MarshalJSON implements the encoding/json.Marshaler interface providing output of
 // all EXIF fields present (names and values).
 func (x Exif) MarshalJSON() ([]byte, error) {
-	return json.Marshal(x.main)
+	return json.Marshal(x.Fields)
 }
 
 type appSec struct {
@@ -819,7 +648,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 		opts = &DecodeOptions{}
 	}
 	if opts.MaxExifSize <= 0 {
-		opts.MaxExifSize = ExifLengthCutoff
+		opts.MaxExifSize = exifLengthCutoff
 	}
 	defer func() {
 		if state := recover(); state != nil {
@@ -853,12 +682,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 	}
 
 	// build an exif structure from the tiff
-	x = &Exif{
-		main: map[models.FieldName]*tiff.Tag{},
-		Tiff: tif,
-		Raw:  raw,
-		opts: *opts,
-	}
+	x = New(tif, raw, opts)
 
 	for i, p := range parsers {
 		if err := p.Parse(x); err != nil {
@@ -882,7 +706,7 @@ func checkExifHeader(data []byte) error {
 	if len(data) < 8 {
 		return fmt.Errorf("Invalid EXIF header: too short (length=%d)", len(data))
 	}
-	
+
 	byteorder := binary.BigEndian.Uint16(data[0:2])
 	var order binary.ByteOrder
 	switch byteorder {
@@ -893,7 +717,7 @@ func checkExifHeader(data []byte) error {
 	default:
 		return fmt.Errorf("Invalid EXIF header: unrecognized byte order %04x", byteorder)
 	}
-	
+
 	fortytwo := order.Uint16(data[2:4])
 	if fortytwo != 42 {
 		return fmt.Errorf("Invalid EXIF header: got %v, want 42", fortytwo)
