@@ -1,68 +1,12 @@
 package exif
 
 import (
-	"encoding/binary"
 	"testing"
 	"time"
 
 	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
-
-func createMockExif() *Exif {
-	return &Exif{
-		Fields: make(map[models.FieldName]*tiff.Tag),
-	}
-}
-
-func createMockIntTag(value int) *tiff.Tag {
-	val := make([]byte, 4)
-	binary.LittleEndian.PutUint32(val, uint32(value))
-	return tiff.MakeTag(0x0001, tiff.DTLong, 1, binary.LittleEndian, val)
-}
-
-func createMockShortTag(values ...int) *tiff.Tag {
-	val := make([]byte, 2*len(values))
-	for i, v := range values {
-		binary.LittleEndian.PutUint16(val[i*2:(i+1)*2], uint16(v))
-	}
-	return tiff.MakeTag(0x0005, tiff.DTShort, uint32(len(values)), binary.LittleEndian, val)
-}
-
-func createMockStringTag(value string) *tiff.Tag {
-	val := []byte(value + "\000") // null-terminated
-	return tiff.MakeTag(0x0002, tiff.DTAscii, uint32(len(val)), binary.LittleEndian, val)
-}
-
-func createMockRationalTag(num, den int64) *tiff.Tag {
-	if num < 0 || den < 0 {
-		// Use signed rational for negative values
-		val := make([]byte, 8)
-		binary.LittleEndian.PutUint32(val[0:4], uint32(int32(num)))
-		binary.LittleEndian.PutUint32(val[4:8], uint32(int32(den)))
-		return tiff.MakeTag(0x0003, tiff.DTSRational, 1, binary.LittleEndian, val)
-	} else {
-		// Use unsigned rational for positive values
-		val := make([]byte, 8)
-		binary.LittleEndian.PutUint32(val[0:4], uint32(num))
-		binary.LittleEndian.PutUint32(val[4:8], uint32(den))
-		return tiff.MakeTag(0x0003, tiff.DTRational, 1, binary.LittleEndian, val)
-	}
-}
-
-func createMockGPSTimeTag(hour, min int64, secNum, secDen int64) *tiff.Tag {
-	val := make([]byte, 24) // 3 rationals = 3 * 8 bytes
-	// Hour
-	binary.LittleEndian.PutUint32(val[0:4], uint32(hour))
-	binary.LittleEndian.PutUint32(val[4:8], 1)
-	// Minute  
-	binary.LittleEndian.PutUint32(val[8:12], uint32(min))
-	binary.LittleEndian.PutUint32(val[12:16], 1)
-	// Seconds
-	binary.LittleEndian.PutUint32(val[16:20], uint32(secNum))
-	binary.LittleEndian.PutUint32(val[20:24], uint32(secDen))
-	return tiff.MakeTag(0x0004, tiff.DTRational, 3, binary.LittleEndian, val)
-}
 
 func TestGetImageSize(t *testing.T) {
 	tests := []struct {
@@ -74,8 +18,8 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "ImageWidth and ImageLength tags present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ImageWidth] = createMockIntTag(1920)
-				e.Fields[models.ImageLength] = createMockIntTag(1080)
+				e.Fields[models.ImageWidth] = tiff.MakeIntTag(0x0001, 1920)
+				e.Fields[models.ImageLength] = tiff.MakeIntTag(0x0002, 1080)
 			},
 			expectedWidth:  1920,
 			expectedHeight: 1080,
@@ -83,8 +27,8 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "PixelXDimension and PixelYDimension tags present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.PixelXDimension] = createMockIntTag(3840)
-				e.Fields[models.PixelYDimension] = createMockIntTag(2160)
+				e.Fields[models.PixelXDimension] = tiff.MakeIntTag(0x0001, 3840)
+				e.Fields[models.PixelYDimension] = tiff.MakeIntTag(0x0001, 2160)
 			},
 			expectedWidth:  3840,
 			expectedHeight: 2160,
@@ -100,7 +44,7 @@ func TestGetImageSize(t *testing.T) {
 		{
 			name: "Only width tag present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ImageWidth] = createMockIntTag(1920)
+				e.Fields[models.ImageWidth] = tiff.MakeIntTag(0x0001, 1920)
 			},
 			expectedWidth:  1920,
 			expectedHeight: 0,
@@ -109,11 +53,11 @@ func TestGetImageSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			width, height := exif.GetImageSize()
-			
+
 			if width != tt.expectedWidth {
 				t.Errorf("expected width %d, got %d", tt.expectedWidth, width)
 			}
@@ -134,7 +78,7 @@ func TestGetOrientation(t *testing.T) {
 		{
 			name: "Valid orientation value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.OrientationTag] = createMockIntTag(3)
+				e.Fields[models.OrientationTag] = tiff.MakeIntTag(0x0001, 3)
 			},
 			expected:    models.NewOrientation(3),
 			expectError: false,
@@ -151,11 +95,11 @@ func TestGetOrientation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			orientation, err := exif.GetOrientation()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -179,7 +123,7 @@ func TestGetFlashMode(t *testing.T) {
 		{
 			name: "Valid flash value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.Flash] = createMockIntTag(1)
+				e.Fields[models.Flash] = tiff.MakeIntTag(0x0001, 1)
 			},
 			expected:    models.NewFlashMode(1),
 			expectError: false,
@@ -196,11 +140,11 @@ func TestGetFlashMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			flashMode, err := exif.GetFlashMode()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -224,7 +168,7 @@ func TestGetExposureBias(t *testing.T) {
 		{
 			name: "Valid exposure bias",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ExposureBiasValue] = createMockRationalTag(-1, 3)
+				e.Fields[models.ExposureBiasValue] = tiff.MakeRationalTag(0x0003, tiff.Rational{-1, 3})
 			},
 			expected:    models.NewExposureBias(-1, 3),
 			expectError: false,
@@ -241,11 +185,11 @@ func TestGetExposureBias(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			exposureBias, err := exif.GetExposureBias()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -269,7 +213,7 @@ func TestGetAperture(t *testing.T) {
 		{
 			name: "Valid aperture value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.FNumber] = createMockRationalTag(28, 10)
+				e.Fields[models.FNumber] = tiff.MakeRationalTag(0x0003, tiff.Rational{28, 10})
 			},
 			expected:    2.8,
 			expectError: false,
@@ -286,11 +230,11 @@ func TestGetAperture(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			aperture, err := exif.GetAperture()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -314,7 +258,7 @@ func TestGetISOSpeed(t *testing.T) {
 		{
 			name: "Valid ISO value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ISOSpeedRatings] = createMockIntTag(800)
+				e.Fields[models.ISOSpeedRatings] = tiff.MakeIntTag(0x0001, 800)
 			},
 			expected:    800,
 			expectError: false,
@@ -331,11 +275,11 @@ func TestGetISOSpeed(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			iso, err := exif.GetISOSpeed()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -359,7 +303,7 @@ func TestGetShutterSpeed(t *testing.T) {
 		{
 			name: "Valid shutter speed",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ExposureTime] = createMockRationalTag(1, 250)
+				e.Fields[models.ExposureTime] = tiff.MakeRationalTag(0x0003, tiff.Rational{1, 250})
 			},
 			expected:    models.NewShutterSpeed(1, 250),
 			expectError: false,
@@ -376,11 +320,11 @@ func TestGetShutterSpeed(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			shutterSpeed, err := exif.GetShutterSpeed()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -404,7 +348,7 @@ func TestGetMeteringMode(t *testing.T) {
 		{
 			name: "Valid metering mode",
 			setupTags: func(e *Exif) {
-				e.Fields[models.MeteringModeTag] = createMockIntTag(3)
+				e.Fields[models.MeteringModeTag] = tiff.MakeIntTag(0x0001, 3)
 			},
 			expected:    models.NewMeteringMode(3),
 			expectError: false,
@@ -421,11 +365,11 @@ func TestGetMeteringMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			meteringMode, err := exif.GetMeteringMode()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -449,7 +393,7 @@ func TestGetExposureMode(t *testing.T) {
 		{
 			name: "Valid exposure mode",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ExposureProgram] = createMockIntTag(2)
+				e.Fields[models.ExposureProgram] = tiff.MakeIntTag(0x0001, 2)
 			},
 			expected:    models.NewExposureMode(2),
 			expectError: false,
@@ -466,11 +410,11 @@ func TestGetExposureMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			exposureMode, err := exif.GetExposureMode()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -495,7 +439,7 @@ func TestGetString(t *testing.T) {
 		{
 			name: "Valid string value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.Make] = createMockStringTag("  Canon EOS 5D  ")
+				e.Fields[models.Make] = tiff.MakeAsciiTag(0x0002, "  Canon EOS 5D  ")
 			},
 			field:       models.Make,
 			expected:    "Canon EOS 5D",
@@ -514,11 +458,11 @@ func TestGetString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			result, err := exif.GetString(tt.field)
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -543,7 +487,7 @@ func TestGetStrings(t *testing.T) {
 		{
 			name: "First field present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.Make] = createMockStringTag("  Test Value  ")
+				e.Fields[models.Make] = tiff.MakeAsciiTag(0x0002, "  Test Value  ")
 			},
 			fields:      []models.FieldName{models.Make, models.Model},
 			expected:    "Test Value",
@@ -552,7 +496,7 @@ func TestGetStrings(t *testing.T) {
 		{
 			name: "Second field present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.Model] = createMockStringTag("  Model Value  ")
+				e.Fields[models.Model] = tiff.MakeAsciiTag(0x0002, "  Model Value  ")
 			},
 			fields:      []models.FieldName{models.Make, models.Model},
 			expected:    "Model Value",
@@ -571,11 +515,11 @@ func TestGetStrings(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			result, err := exif.GetStrings(tt.fields...)
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -600,7 +544,7 @@ func TestGetUints(t *testing.T) {
 		{
 			name: "First field present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ImageWidth] = createMockIntTag(1920)
+				e.Fields[models.ImageWidth] = tiff.MakeIntTag(0x0001, 1920)
 			},
 			fields:      []models.FieldName{models.ImageWidth, models.ImageLength},
 			expected:    1920,
@@ -609,7 +553,7 @@ func TestGetUints(t *testing.T) {
 		{
 			name: "Second field present",
 			setupTags: func(e *Exif) {
-				e.Fields[models.ImageLength] = createMockIntTag(1080)
+				e.Fields[models.ImageLength] = tiff.MakeIntTag(0x0001, 1080)
 			},
 			fields:      []models.FieldName{models.ImageWidth, models.ImageLength},
 			expected:    1080,
@@ -628,11 +572,11 @@ func TestGetUints(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			result, err := exif.GetUints(tt.fields...)
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -656,8 +600,8 @@ func TestGPSAltitude(t *testing.T) {
 		{
 			name: "Above sea level",
 			setupTags: func(e *Exif) {
-				e.Fields[models.GPSAltitude] = createMockRationalTag(1500, 10)
-				e.Fields[models.GPSAltitudeRef] = createMockIntTag(0)
+				e.Fields[models.GPSAltitude] = tiff.MakeRationalTag(0x0003, tiff.Rational{1500, 10})
+				e.Fields[models.GPSAltitudeRef] = tiff.MakeIntTag(0x0001, 0)
 			},
 			expected:    150.0,
 			expectError: false,
@@ -665,8 +609,8 @@ func TestGPSAltitude(t *testing.T) {
 		{
 			name: "Below sea level",
 			setupTags: func(e *Exif) {
-				e.Fields[models.GPSAltitude] = createMockRationalTag(300, 10)
-				e.Fields[models.GPSAltitudeRef] = createMockIntTag(1)
+				e.Fields[models.GPSAltitude] = tiff.MakeRationalTag(0x0003, tiff.Rational{300, 10})
+				e.Fields[models.GPSAltitudeRef] = tiff.MakeIntTag(0x0001, 1)
 			},
 			expected:    -30.0,
 			expectError: false,
@@ -683,11 +627,11 @@ func TestGPSAltitude(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			altitude, err := exif.GPSAltitude()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -712,7 +656,7 @@ func TestFocalLength(t *testing.T) {
 		{
 			name: "Rational type focal length",
 			setupTags: func(e *Exif) {
-				e.Fields[models.FocalLength] = createMockRationalTag(85, 1)
+				e.Fields[models.FocalLength] = tiff.MakeRationalTag(0x0003, tiff.Rational{85, 1})
 			},
 			field:       models.FocalLength,
 			expected:    85.0,
@@ -721,7 +665,7 @@ func TestFocalLength(t *testing.T) {
 		{
 			name: "Zero denominator",
 			setupTags: func(e *Exif) {
-				e.Fields[models.FocalLength] = createMockRationalTag(85, 0)
+				e.Fields[models.FocalLength] = tiff.MakeRationalTag(0x0003, tiff.Rational{85, 0})
 			},
 			field:       models.FocalLength,
 			expected:    85.0,
@@ -730,7 +674,7 @@ func TestFocalLength(t *testing.T) {
 		{
 			name: "Short type focal length - single value",
 			setupTags: func(e *Exif) {
-				e.Fields[models.FocalLength] = createMockShortTag(0, 85) // When a == 0, returns b as float
+				e.Fields[models.FocalLength] = tiff.MakeShortTag(0x0005, 0, 85) // When a == 0, returns b as float
 			},
 			field:       models.FocalLength,
 			expected:    85.0,
@@ -749,11 +693,11 @@ func TestFocalLength(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			focalLength, err := exif.FocalLength(tt.field)
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
@@ -777,8 +721,8 @@ func TestGPSTimeStamp(t *testing.T) {
 		{
 			name: "Valid GPS timestamp with seconds",
 			setupTags: func(e *Exif) {
-				e.Fields[models.GPSDateStamp] = createMockStringTag("2023:12:25")
-				e.Fields[models.GPSTimeStamp] = createMockGPSTimeTag(14, 30, 45500, 1000)
+				e.Fields[models.GPSDateStamp] = tiff.MakeAsciiTag(0x0002, "2023:12:25")
+				e.Fields[models.GPSTimeStamp] = tiff.MakeGPSTimeTag(0x0004, 14, 30, 45500, 1000)
 			},
 			expected:    time.Date(2023, 12, 25, 14, 30, 45, 500000000, time.UTC),
 			expectError: false,
@@ -794,7 +738,7 @@ func TestGPSTimeStamp(t *testing.T) {
 		{
 			name: "No time stamp tag",
 			setupTags: func(e *Exif) {
-				e.Fields[models.GPSDateStamp] = createMockStringTag("2023:12:25")
+				e.Fields[models.GPSDateStamp] = tiff.MakeAsciiTag(0x0002, "2023:12:25")
 			},
 			expected:    time.Time{},
 			expectError: true,
@@ -803,18 +747,18 @@ func TestGPSTimeStamp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			exif := createMockExif()
+			exif := New(nil, nil, nil)
 			tt.setupTags(exif)
-			
+
 			timestamp, err := exif.GPSTimeStamp()
-			
+
 			if tt.expectError && err == nil {
 				t.Error("expected error but got none")
 			}
 			if !tt.expectError && err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
-			
+
 			if !tt.expectError && !timestamp.Equal(tt.expected) {
 				t.Errorf("expected timestamp %v, got %v", tt.expected, timestamp)
 			}

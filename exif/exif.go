@@ -37,10 +37,10 @@ const (
 
 // Exif provides access to decoded EXIF metadata fields and values.
 type Exif struct {
-	Tiff *tiff.Tiff
+	Tiff   *tiff.Tiff
 	Fields map[models.FieldName]*tiff.Tag
-	Raw  []byte
-	opts DecodeOptions
+	Raw    []byte
+	opts   DecodeOptions
 }
 
 func New(tif *tiff.Tiff, raw []byte, opts *DecodeOptions) *Exif {
@@ -49,9 +49,9 @@ func New(tif *tiff.Tiff, raw []byte, opts *DecodeOptions) *Exif {
 	}
 	return &Exif{
 		Fields: map[models.FieldName]*tiff.Tag{},
-		Tiff: tif,
-		Raw:  raw,
-		opts: *opts,
+		Tiff:   tif,
+		Raw:    raw,
+		opts:   *opts,
 	}
 }
 

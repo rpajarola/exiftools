@@ -211,6 +211,78 @@ func MakeTag(id uint16, dt DataType, count uint32, order binary.ByteOrder, val [
 	return &res
 }
 
+func MakeIntTag(id uint16, values ...int) *Tag {
+	int64values := make([]int64, len(values))
+	for i, v := range values {
+		int64values[i] = int64(v)
+	}
+	return &Tag{
+		Id:      id,
+		Type:    DTLong,
+		format:  IntVal,
+		Count:   1,
+		intVals: int64values,
+	}
+}
+
+func MakeShortTag(id uint16, v ...int16) *Tag {
+	int64values := make([]int64, len(v))
+	for i, v := range v {
+		int64values[i] = int64(v)
+	}
+	return &Tag{
+		Id:      id,
+		Type:    DTShort,
+		format:  IntVal,
+		Count:   1,
+		intVals: int64values,
+	}
+}
+
+func MakeAsciiTag(id uint16, v string) *Tag {
+	return &Tag{
+		Id:     id,
+		Type:   DTAscii,
+		format: StringVal,
+		Count:  1,
+		strVal: v,
+	}
+}
+
+type Rational [2]int64
+
+func MakeRationalTag(id uint16, v...Rational) *Tag {
+	vals := make([][]int64, len(v))
+	for i, v := range v {
+		vals[i] = []int64{v[0], v[1]}
+	}
+	return &Tag{
+		Id:      id,
+		Type:    DTRational,
+		format:  RatVal,
+		Count:   uint32(len(v)),
+		ratVals: vals,
+	}
+}
+
+func MakeSRationalTag(id uint16, v...Rational) *Tag {
+	vals := make([][]int64, len(v))
+	for i, v := range v {
+		vals[i] = []int64{v[0], v[1]}
+	}
+	return &Tag{
+		Id:      id,
+		Type:    DTSRational,
+		format:  RatVal,
+		Count:   uint32(len(v)),
+		ratVals: vals,
+	}
+}
+
+func MakeGPSTimeTag(id uint16, hour, min int64, secNum, secDen int64) *Tag {
+        return MakeRationalTag(0x0004, Rational{hour, 1}, Rational{min, 1}, Rational{secNum, secDen})
+}
+
 func (t *Tag) convertVals() error {
 	r := bytes.NewReader(t.Val)
 
