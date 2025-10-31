@@ -20,7 +20,7 @@ func main() {
 		fmt.Printf("os.Open(%v): %v\n", fname, err)
 		return
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 	opts := &exif.DecodeOptions{KeepUnknownTags: true}
 	x, err := exif.DecodeWithOptions(f, opts)
 	if err != nil {
@@ -28,10 +28,13 @@ func main() {
 		return
 	}
 
-	x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
+	err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 		fmt.Printf("%v: %v\n", name, tag.String())
 		return nil
 	}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 type walkFunc func(models.FieldName, *tiff.Tag) error

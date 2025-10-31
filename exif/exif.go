@@ -24,6 +24,7 @@ import (
 type DecodeOptions struct {
 	KeepUnknownTags bool // Keep unknown tags (default: false)
 	MaxExifSize     int  // maximum size of exif data (default: 4MB)
+	Debug           bool // Debug enables verbose tag listing after parse
 }
 
 const (
@@ -221,7 +222,10 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	}
 
 	// Read raw EXIF data
-	er.Seek(0, 0)
+	_, err = er.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
 	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
@@ -240,8 +244,13 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 			// for now, but that could change.
 			return x, fmt.Errorf("exif: parser %v failed (%w)", i, err)
 		}
+		if opts != nil && opts.Debug {
+			fmt.Printf("Loaded %d EXIF fields\n", len(x.Fields))
+			for name := range x.Fields {
+				fmt.Println("Tag:", name)
+			}
+		}
 	}
-
 	return x, nil
 }
 
@@ -258,6 +267,12 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]models.FieldName, showM
 				continue
 			}
 			name = models.FieldName(fmt.Sprintf("%v%x", models.UnknownPrefix, tag.Id))
+		}
+		// Include UNDEFINED (Type 7) tags like InteropVersion
+		if tag.Format() == tiff.UndefVal {
+			// Force store as string so tagString() can read it later
+			x.Fields[name] = tag
+			continue
 		}
 		x.Fields[name] = tag
 	}
@@ -677,8 +692,15 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 
 	er := bytes.NewReader(data[foundAt:])
 	tif, err := tiff.Decode(er)
+	if err != nil {
+		return nil, decodeError{cause: err}
+	}
 
-	er.Seek(0, 0)
+	_, err = er.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}

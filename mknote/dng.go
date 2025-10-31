@@ -78,7 +78,7 @@ func (*adobeDNG) Parse(x *exif.Exif) error {
 	if err != nil {
 		return nil
 	}
-	if !(m.Count > 0) {
+	if !(m.Count > 0) { //nolint:staticcheck
 		return nil
 	}
 	subIfds := []map[uint16]models.FieldName{

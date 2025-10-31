@@ -28,13 +28,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dst.Close()
+	defer dst.Close() //nolint:errcheck
 
 	dir, err := os.Open(testDataDir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dir.Close()
+	defer dir.Close() //nolint:errcheck
 
 	names, err := dir.Readdirnames(0)
 	if err != nil {
@@ -48,8 +48,8 @@ func main() {
 }
 
 func makeExpected(files []string, w io.Writer) {
-	fmt.Fprintf(w, "package main\n\n")
-	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n")
+	fmt.Fprintf(w, "package main\n\n")                                      //nolint:errcheck
+	fmt.Fprintf(w, "var regressExpected = map[string]map[string]string{\n") //nolint:errcheck
 
 	for _, name := range files {
 		f, err := os.Open(name)
@@ -60,28 +60,28 @@ func makeExpected(files []string, w io.Writer) {
 
 		x, err := exif.DecodeWithParseHeader(f)
 		if err != nil {
-			fmt.Fprintf(w, "\"%v\": {\n", filepath.Base(name))
-			fmt.Fprintf(w, "\"ERROR\": %q,\n", err)
-			fmt.Fprintf(w, "},\n")
-			f.Close()
+			fmt.Fprintf(w, "\"%v\": {\n", filepath.Base(name)) //nolint:errcheck
+			fmt.Fprintf(w, "\"ERROR\": %q,\n", err)            //nolint:errcheck
+			fmt.Fprintf(w, "},\n")                             //nolint:errcheck
+			f.Close()                                          //nolint:errcheck
 			continue
 		}
 
 		var items []string
-		x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
+		x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error { //nolint:errcheck
 			items = append(items, fmt.Sprintf("\"%v\": %q,\n", name, tag.String()))
 			return nil
 		}))
 		sort.Strings(items)
 
-		fmt.Fprintf(w, "\"%v\": {\n", filepath.Base(name))
+		fmt.Fprintf(w, "\"%v\": {\n", filepath.Base(name)) //nolint:errcheck
 		for _, item := range items {
-			fmt.Fprint(w, item)
+			fmt.Fprint(w, item) //nolint:errcheck
 		}
-		fmt.Fprintf(w, "},\n")
-		f.Close()
+		fmt.Fprintf(w, "},\n") //nolint:errcheck
+		f.Close()              //nolint:errcheck
 	}
-	fmt.Fprintf(w, "}")
+	fmt.Fprintf(w, "}") //nolint:errcheck
 }
 
 type walkFunc func(models.FieldName, *tiff.Tag) error

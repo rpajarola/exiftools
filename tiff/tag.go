@@ -165,7 +165,10 @@ func DecodeTag(r ReadAtReader, order binary.ByteOrder) (*Tag, error) {
 	}
 
 	if valLen > 4 {
-		binary.Read(r, order, &t.ValOffset)
+		err = binary.Read(r, order, &t.ValOffset)
+		if err != nil {
+			return nil, fmt.Errorf("error reading IFD tag: %w", err)
+		}
 
 		// Use a bytes.Buffer so we don't allocate a huge slice if the tag
 		// is corrupt.
@@ -207,7 +210,10 @@ func MakeTag(id uint16, dt DataType, count uint32, order binary.ByteOrder, val [
 		Val:   val,
 		order: order,
 	}
-	res.convertVals()
+	err := res.convertVals()
+	if err != nil {
+		return nil
+	}
 	return &res
 }
 
@@ -251,7 +257,7 @@ func MakeAsciiTag(id uint16, v string) *Tag {
 
 type Rational [2]int64
 
-func MakeRationalTag(id uint16, v...Rational) *Tag {
+func MakeRationalTag(id uint16, v ...Rational) *Tag {
 	vals := make([][]int64, len(v))
 	for i, v := range v {
 		vals[i] = []int64{v[0], v[1]}
@@ -265,7 +271,7 @@ func MakeRationalTag(id uint16, v...Rational) *Tag {
 	}
 }
 
-func MakeSRationalTag(id uint16, v...Rational) *Tag {
+func MakeSRationalTag(id uint16, v ...Rational) *Tag {
 	vals := make([][]int64, len(v))
 	for i, v := range v {
 		vals[i] = []int64{v[0], v[1]}
@@ -280,7 +286,7 @@ func MakeSRationalTag(id uint16, v...Rational) *Tag {
 }
 
 func MakeGPSTimeTag(id uint16, hour, min int64, secNum, secDen int64) *Tag {
-        return MakeRationalTag(0x0004, Rational{hour, 1}, Rational{min, 1}, Rational{secNum, secDen})
+	return MakeRationalTag(0x0004, Rational{hour, 1}, Rational{min, 1}, Rational{secNum, secDen})
 }
 
 func (t *Tag) convertVals() error {

@@ -8,7 +8,7 @@ import (
 // XMP
 
 // DublinCore - Dublin Core metadata
-///// Modified DublinCore 17/03/2020 https://godoc.org/trimmer.io/go-xmp/models/dc#DublinCore
+// /// Modified DublinCore 17/03/2020 https://godoc.org/trimmer.io/go-xmp/models/dc#DublinCore
 type DublinCore struct {
 	Creator     []string    `xmp:"dc:creator"`
 	Date        []time.Time `xmp:"dc:date"`
@@ -21,7 +21,7 @@ type DublinCore struct {
 }
 
 // XmpBase -
-///// Modified XmpBase 17/04/2019 https://godoc.org/trimmer.io/go-xmp/models/xmp_base#XmpBase
+// /// Modified XmpBase 17/04/2019 https://godoc.org/trimmer.io/go-xmp/models/xmp_base#XmpBase
 type XmpBase struct {
 	CreateDate   time.Time `xmp:"xmp:CreateDate"`
 	CreatorTool  string    `xmp:"xmp:CreatorTool"`
@@ -33,7 +33,7 @@ type XmpBase struct {
 }
 
 // CC - Creative Commons Metadata
-///// Modified XmpBase 18/03/2020
+// /// Modified XmpBase 18/03/2020
 type CC struct {
 	License         string `xmp:"cc:license"`
 	MorePermissions string `xmp:"cc:morePermissions"`
@@ -42,7 +42,7 @@ type CC struct {
 }
 
 // XmpDJI - video cameras on DJI drones
-///// Modified XmpDJI 18/03/2020
+// /// Modified XmpDJI 18/03/2020
 type XmpDJI struct {
 	AbsoluteAltitude  float32 `xmp:"drone-dji:AbsoluteAltitude"`  //  "+543.44",
 	FlightPitchDegree float32 `xmp:"drone-dji:FlightPitchDegree"` //  "+4.80",

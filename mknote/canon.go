@@ -97,9 +97,18 @@ func (cr *CanonRaw) Get(x *exif.Exif) error {
 	if err := cr.canonAFInfo(x); err != nil {
 		return err
 	}
-	cr.imageType(x)
-	cr.modelID(x)
-	cr.timezone(x)
+	err := cr.imageType(x)
+	if err != nil {
+		return err
+	}
+	err = cr.modelID(x)
+	if err != nil {
+		return err
+	}
+	err = cr.timezone(x)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -245,7 +254,7 @@ var canonMakerNoteTimezones = map[int]string{
 }
 
 // canonMakerNoteTimezoneValues - Canon MakerNote Timezone values
-var canonMakerNoteTimezoneValues = map[int]string{
+var canonMakerNoteTimezoneValues = map[int]string{ //nolint:unused
 	0:     "n/a",
 	1:     "Chatham Islands",
 	2:     "Wellington",
@@ -320,7 +329,10 @@ func (*canon) Parse(x *exif.Exif) error {
 	// Canon notes are a single IFD directory with no header.
 	// Reader offsets need to be w.r.t. the original tiff structure.
 	cReader := bytes.NewReader(append(make([]byte, m.ValOffset), m.Val...))
-	cReader.Seek(int64(m.ValOffset), 0)
+	_, err = cReader.Seek(int64(m.ValOffset), 0)
+	if err != nil {
+		return err
+	}
 
 	mkNotesDir, _, err := tiff.DecodeDir(cReader, x.Tiff.Order)
 	if err != nil {

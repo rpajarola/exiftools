@@ -201,12 +201,12 @@ func (x *Exif) GPSAltitude() (float32, error) {
 
 	ref, err := altRef.Int(0)
 	if err != nil {
-		return 0, fmt.Errorf("cannot parse GPS Altitude: %v", err)
+		return 0, fmt.Errorf("cannot parse GPS Altitude: %w", err)
 	}
 
 	aN, aD, err := alt.Rat2(0)
 	if err != nil {
-		return 0, fmt.Errorf("cannot parse GPS Altitude: %v", err)
+		return 0, fmt.Errorf("cannot parse GPS Altitude: %w", err)
 	}
 
 	a := float32(aN / aD)
@@ -261,7 +261,7 @@ func (x *Exif) GPSTimeStamp() (time.Time, error) {
 func (x *Exif) FocalLength(fn models.FieldName) (fl float32, err error) {
 	tag, err := x.Get(fn)
 	if err != nil {
-		err = fmt.Errorf("cannot parse Focal Length: %v", err)
+		err = fmt.Errorf("cannot parse Focal Length: %w", err)
 		return
 	}
 
@@ -300,3 +300,5 @@ func (x *Exif) FocalLength(fn models.FieldName) (fl float32, err error) {
 	}
 	return 0, fmt.Errorf("cannot parse FocalLength")
 }
+
+// see exif/structured for higher-level helpers.

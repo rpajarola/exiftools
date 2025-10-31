@@ -104,7 +104,7 @@ func TestMarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	x, err := Decode(f)
 	if err != nil {
@@ -162,7 +162,7 @@ func TestMaxUint32CountError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	_, err = Decode(f)
 	if err == nil {
@@ -180,7 +180,7 @@ func TestHugeTagError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	_, err = DecodeWithParseHeader(f)
 	if err == nil {
@@ -198,7 +198,7 @@ func TestZeroLengthTagError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	_, err = DecodeWithParseHeader(f)
 	if err == nil {
@@ -217,7 +217,7 @@ func TestDecodeHEIF(t *testing.T) {
 		t.Skipf("HEIF test file not found: %v", err)
 		return
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	// Test that we can decode HEIF files using DecodeWithParseHeader
 	// (regular Decode() doesn't handle HEIF format detection)

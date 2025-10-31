@@ -18,7 +18,7 @@ func TestRegression(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open test data directory '%s': %v", testDataDir, err)
 	}
-	defer dir.Close()
+	defer dir.Close() //nolint:errcheck
 
 	names, err := dir.Readdirnames(0)
 	if err != nil {
@@ -46,7 +46,7 @@ func compareFile(t *testing.T, filename string, want map[string]string) {
 	if err != nil {
 		t.Fatalf("Could not open test file '%s': %v", filepath, err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	got := make(map[string]string)
 

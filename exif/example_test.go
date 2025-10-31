@@ -17,7 +17,7 @@ func TestDecodeExample(t *testing.T) {
 	if err != nil {
 		t.Skipf("Test file not found: %v", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	x, err := Decode(f)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestDecodeWithParseHeaderExample(t *testing.T) {
 	if err != nil {
 		t.Skipf("Test data directory not found: %v", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	names, err := f.Readdirnames(0)
 	if err != nil {
@@ -80,7 +80,7 @@ func TestDecodeWithParseHeaderExample(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open test file: %v", err)
 	}
-	defer testF.Close()
+	defer testF.Close() //nolint:errcheck
 
 	x, err := DecodeWithParseHeader(testF)
 	if err != nil {
