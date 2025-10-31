@@ -6,12 +6,10 @@ import (
 	"os"
 
 	"github.com/rpajarola/exiftools/exif"
-	"github.com/rpajarola/exiftools/models"
 	_ "github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
-
-const testDataDir = "testdata"
 
 func main() {
 	flag.Parse()
@@ -23,7 +21,7 @@ func main() {
 		return
 	}
 	defer f.Close()
-	opts := &exif.DecodeOptions{KeepUnknownTags:true}
+	opts := &exif.DecodeOptions{KeepUnknownTags: true}
 	x, err := exif.DecodeWithOptions(f, opts)
 	if err != nil {
 		fmt.Printf("exif.Decode(%v): %v\n", fname, err)

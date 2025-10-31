@@ -31,11 +31,11 @@ func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr models.FieldName, fieldMap ma
 
 	_, err = r.Seek(offset, 0)
 	if err != nil {
-		return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", ptr, err)
+		return fmt.Errorf("exif: seek to sub-IFD %s failed: %w", ptr, err)
 	}
 	subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
 	if err != nil {
-		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
+		return fmt.Errorf("exif: sub-IFD %s decode failed: %w", ptr, err)
 	}
 	x.LoadTags(subDir, fieldMap, false)
 	return nil

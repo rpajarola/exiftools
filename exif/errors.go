@@ -20,6 +20,10 @@ type decodeError struct {
 	cause error
 }
 
+func (e decodeError) Unwrap() error {
+	return e.cause
+}
+
 func (de decodeError) Error() string {
 	return fmt.Sprintf("exif: decode failed (%v) ", de.cause.Error())
 }

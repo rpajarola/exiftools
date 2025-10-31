@@ -94,11 +94,11 @@ func (*adobeDNG) Parse(x *exif.Exif) error {
 		}
 		_, err = r.Seek(offset, 0)
 		if err != nil {
-			return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", models.SubIfdsPointer, err)
+			return fmt.Errorf("exif: seek to sub-IFD %s failed: %w", models.SubIfdsPointer, err)
 		}
 		subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
 		if err != nil {
-			return fmt.Errorf("exif: sub-IFD %s decode failed: %v", models.SubIfdsPointer, err)
+			return fmt.Errorf("exif: sub-IFD %s decode failed: %w", models.SubIfdsPointer, err)
 		}
 		x.LoadTags(subDir, sub, false)
 	}
