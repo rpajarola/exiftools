@@ -19,7 +19,7 @@ func init() {
 	exif.RegisterParsers(All...)
 }
 
-func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr models.FieldName, fieldMap map[uint16]models.FieldName) error {
+func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr models.FieldName, fieldMap map[uint16]models.FieldName) error { //nolint:unused // TODO delete this?
 	tag, err := x.Get(ptr)
 	if err != nil {
 		return nil
@@ -31,11 +31,11 @@ func loadSubDir(x *exif.Exif, r *bytes.Reader, ptr models.FieldName, fieldMap ma
 
 	_, err = r.Seek(offset, 0)
 	if err != nil {
-		return fmt.Errorf("exif: seek to sub-IFD %s failed: %v", ptr, err)
+		return fmt.Errorf("exif: seek to sub-IFD %s failed: %w", ptr, err)
 	}
 	subDir, _, err := tiff.DecodeDir(r, x.Tiff.Order)
 	if err != nil {
-		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
+		return fmt.Errorf("exif: sub-IFD %s decode failed: %w", ptr, err)
 	}
 	x.LoadTags(subDir, fieldMap, false)
 	return nil

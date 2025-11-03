@@ -24,6 +24,7 @@ import (
 type DecodeOptions struct {
 	KeepUnknownTags bool // Keep unknown tags (default: false)
 	MaxExifSize     int  // maximum size of exif data (default: 4MB)
+	Debug           bool // Debug enables verbose tag listing after parse
 }
 
 const (
@@ -181,7 +182,7 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	header := make([]byte, 8)
 	n, err := io.ReadFull(r, header)
 	if err != nil {
-		return nil, fmt.Errorf("exif: error reading 8 byte header, got %d, %v", n, err)
+		return nil, fmt.Errorf("exif: error reading 8 byte header, got %d, %w", n, err)
 	}
 
 	// Detect the file type
@@ -221,7 +222,10 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 	}
 
 	// Read raw EXIF data
-	er.Seek(0, 0)
+	_, err = er.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
 	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
@@ -238,10 +242,15 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 			}
 			// This should never happen, as Parse always returns a tiffError
 			// for now, but that could change.
-			return x, fmt.Errorf("exif: parser %v failed (%v)", i, err)
+			return x, fmt.Errorf("exif: parser %v failed (%w)", i, err)
+		}
+		if opts != nil && opts.Debug {
+			fmt.Printf("Loaded %d EXIF fields\n", len(x.Fields))
+			for name := range x.Fields {
+				fmt.Println("Tag:", name)
+			}
 		}
 	}
-
 	return x, nil
 }
 
@@ -258,6 +267,12 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]models.FieldName, showM
 				continue
 			}
 			name = models.FieldName(fmt.Sprintf("%v%x", models.UnknownPrefix, tag.Id))
+		}
+		// Include UNDEFINED (Type 7) tags like InteropVersion
+		if tag.Format() == tiff.UndefVal {
+			// Force store as string so tagString() can read it later
+			x.Fields[name] = tag
+			continue
 		}
 		x.Fields[name] = tag
 	}
@@ -486,13 +501,13 @@ func (x *Exif) parseGPSCoordinate(coordTag, refTag models.FieldName, coordName s
 	// Parse the degrees value
 	coord, err := tagDegrees(tag)
 	if err != nil {
-		return 0, fmt.Errorf("cannot parse %s: %v", coordName, err)
+		return 0, fmt.Errorf("cannot parse %s: %w", coordName, err)
 	}
 
 	// Apply the reference direction
 	ref, err := refTagVal.StringVal()
 	if err != nil {
-		return 0, fmt.Errorf("cannot parse %s reference: %v", coordName, err)
+		return 0, fmt.Errorf("cannot parse %s reference: %w", coordName, err)
 	}
 
 	// Apply negative sign for South/West
@@ -655,7 +670,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 	}
 	defer func() {
 		if state := recover(); state != nil {
-			err = fmt.Errorf("Exif Error: %v", err)
+			err = fmt.Errorf("Exif Error: %w", err)
 		}
 	}()
 	r2 := io.LimitReader(r, int64(opts.MaxExifSize))
@@ -677,8 +692,15 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 
 	er := bytes.NewReader(data[foundAt:])
 	tif, err := tiff.Decode(er)
+	if err != nil {
+		return nil, decodeError{cause: err}
+	}
 
-	er.Seek(0, 0)
+	_, err = er.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	raw, err := io.ReadAll(er)
 	if err != nil {
 		return nil, decodeError{cause: err}
@@ -694,7 +716,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 			}
 			// This should never happen, as Parse always returns a tiffError
 			// for now, but that could change.
-			return x, fmt.Errorf("exif: parser %v failed (%v)", i, err)
+			return x, fmt.Errorf("exif: parser %v failed (%w)", i, err)
 		}
 	}
 
@@ -707,7 +729,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 // Table 1 p 31: TIFF Headers
 func checkExifHeader(data []byte) error {
 	if len(data) < 8 {
-		return fmt.Errorf("Invalid EXIF header: too short (length=%d)", len(data))
+		return fmt.Errorf("invalid EXIF header: too short (length=%d)", len(data))
 	}
 
 	byteorder := binary.BigEndian.Uint16(data[0:2])
@@ -718,12 +740,12 @@ func checkExifHeader(data []byte) error {
 	case 0x4949: // II aka Intel
 		order = binary.LittleEndian
 	default:
-		return fmt.Errorf("Invalid EXIF header: unrecognized byte order %04x", byteorder)
+		return fmt.Errorf("invalid EXIF header: unrecognized byte order %04x", byteorder)
 	}
 
 	fortytwo := order.Uint16(data[2:4])
 	if fortytwo != 42 {
-		return fmt.Errorf("Invalid EXIF header: got %v, want 42", fortytwo)
+		return fmt.Errorf("invalid EXIF header: got %v, want 42", fortytwo)
 	}
 	return nil
 }

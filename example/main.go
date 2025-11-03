@@ -1,31 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"flag"
 	"os"
 	"time"
 
-	"encoding/json"
-
-	"github.com/TylerBrock/colorjson"
-
 	"github.com/rpajarola/exiftools/exif"
-	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/xmp"
 )
 
 func main() {
-        flag.Parse()
-        fname := flag.Arg(0)
+	flag.Parse()
+	fname := flag.Arg(0)
 
 	f, err := os.Open(fname)
 	if err != nil {
 		log.Fatalf("open %v: %v", fname, err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	start := time.Now()
 	metadata(f)
@@ -34,7 +30,10 @@ func main() {
 
 // NewMetadata -
 func NewMetadata(f *os.File) *Metadata {
-	f.Seek(0, 0)
+	_, err := f.Seek(0, 0)
+	if err != nil {
+		log.Println(err)
+	}
 	// Check fileSize
 	fi, err := f.Stat()
 	if err != nil {
@@ -70,7 +69,10 @@ func (m *Metadata) xmpMetadata(f *os.File) error {
 // EXIF
 func (m *Metadata) exifMetadata(f *os.File) error {
 	m.Exif = Exif{}
-	f.Seek(0, 0)
+	_, err := f.Seek(0, 0)
+	if err != nil {
+		return err
+	}
 
 	// Optionally register camera makernote data parsing - Canon, Nikon and AdobeDNG are supported
 	exif.RegisterParsers(mknote.All...)
@@ -124,7 +126,10 @@ func (m *Metadata) exifMetadata(f *os.File) error {
 	//colorJSON(a)
 	//fmt.Println(x.DateTime())
 	cr := new(mknote.CanonRaw)
-	cr.Get(x)
+	err = cr.Get(x)
+	if err != nil {
+		return err
+	}
 	fmt.Println(cr)
 	//m.CanonRaw = *cr
 	//fmt.Println(x.Get(mknote.CanonFileInfo))
@@ -150,16 +155,4 @@ func metadata(f *os.File) {
 	}
 
 	//fmt.Println(m)
-}
-
-func colorJSON(b []byte) {
-	var obj map[string]interface{}
-	json.Unmarshal([]byte(b), &obj)
-	// Make a custom formatter with indent set
-	f := colorjson.NewFormatter()
-	f.Indent = 4
-
-	// Marshall the Colorized JSON
-	s, _ := f.Marshal(obj)
-	fmt.Println(string(s))
 }

@@ -143,7 +143,10 @@ func (*apple) Parse(x *exif.Exif) error {
 	// Apple makenotes is a self contained IFD with no tiff marker,
 	//  offsets are relative to the start of the of the maker note.
 	nReader := bytes.NewReader(m.Val)
-	nReader.Seek(14, 0)
+	_, err = nReader.Seek(14, 0)
+	if err != nil {
+		return err
+	}
 
 	mkNotesDir, _, err := tiff.DecodeDir(nReader, x.Tiff.Order)
 	if err != nil {

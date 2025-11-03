@@ -6,12 +6,10 @@ import (
 	"os"
 
 	"github.com/rpajarola/exiftools/exif"
-	"github.com/rpajarola/exiftools/models"
 	_ "github.com/rpajarola/exiftools/mknote"
+	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/tiff"
 )
-
-const testDataDir = "testdata"
 
 func main() {
 	flag.Parse()
@@ -22,18 +20,21 @@ func main() {
 		fmt.Printf("os.Open(%v): %v\n", fname, err)
 		return
 	}
-	defer f.Close()
-	opts := &exif.DecodeOptions{KeepUnknownTags:true}
+	defer f.Close() //nolint:errcheck
+	opts := &exif.DecodeOptions{KeepUnknownTags: true}
 	x, err := exif.DecodeWithOptions(f, opts)
 	if err != nil {
 		fmt.Printf("exif.Decode(%v): %v\n", fname, err)
 		return
 	}
 
-	x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
+	err = x.Walk(walkFunc(func(name models.FieldName, tag *tiff.Tag) error {
 		fmt.Printf("%v: %v\n", name, tag.String())
 		return nil
 	}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 type walkFunc func(models.FieldName, *tiff.Tag) error

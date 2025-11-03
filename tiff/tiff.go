@@ -49,13 +49,13 @@ func Decode(r io.Reader) (*Tiff, error) {
 	} else if string(bo) == "MM" {
 		t.Order = binary.BigEndian
 	} else {
-		return nil, errors.New(fmt.Sprintf("tiff: invalid tiff byte order %v", hex.EncodeToString(bo)))
+		return nil, fmt.Errorf("tiff: invalid tiff byte order %v", hex.EncodeToString(bo))
 	}
 
 	// check for special tiff marker
 	var sp int16
 	err = binary.Read(buf, t.Order, &sp)
-	if err != nil || 42 != sp {
+	if err != nil || 42 != sp { //nolint:staticcheck
 		return nil, errors.New("tiff: could not find special tiff marker")
 	}
 

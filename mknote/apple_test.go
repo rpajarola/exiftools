@@ -20,7 +20,7 @@ func TestAppleParseValidMakerNote(t *testing.T) {
 	if err != nil {
 		t.Skipf("os.Open(%v): %v", testFile, err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	ex, err := exif.DecodeWithParseHeader(f)
 	if err != nil {

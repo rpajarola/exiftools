@@ -155,6 +155,7 @@ const (
 // interoperability fields
 const (
 	InteroperabilityIndex FieldName = "InteroperabilityIndex"
+	InteropVersion        FieldName = "InteropVersion"
 )
 
 // Pointer constants for various IFDs
@@ -328,6 +329,7 @@ var InteropFields = map[uint16]FieldName{
 	//// Interoperability sub-IFD ///////
 	/////////////////////////////////////
 	0x1: InteroperabilityIndex,
+	0x2: InteropVersion,
 }
 
 var ThumbnailFields = map[uint16]FieldName{
@@ -335,7 +337,7 @@ var ThumbnailFields = map[uint16]FieldName{
 	0x0202: ThumbJPEGInterchangeFormatLength,
 }
 
-var previewImageFields = map[uint16]FieldName{
+var previewImageFields = map[uint16]FieldName{ //nolint:unused
 	0x0111: PreviewImageStart,
 	0x0117: PreviewImageLength,
 }

@@ -132,7 +132,7 @@ func CanonLens(lensType int) string {
 }
 
 // CanonImageSize -
-var canonImageSizeValues = map[int]string{
+var canonImageSizeValues = map[int]string{ //nolint:unused
 	-1:  "n/a",
 	0:   "Large",
 	1:   "Medium",

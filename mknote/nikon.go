@@ -148,7 +148,7 @@ const (
 	NikonPreviewCompression models.FieldName = "Nikon.Preview.Compression"
 )
 
-var makerNoteNikon3PreviewFields = map[uint16]models.FieldName{
+var makerNoteNikon3PreviewFields = map[uint16]models.FieldName{ //nolint:unused
 	0x00fe: NikonPreviewSubfileType,
 	0x0103: NikonPreviewCompression,
 	0x0201: NikonPreviewImageStart,
@@ -189,13 +189,20 @@ func (*nikonV3) Parse(x *exif.Exif) error {
 	makerNoteOffset := m.ValOffset + 10
 	x.LoadTags(mkNotes.Dirs[0], makerNoteNikon3Fields, false)
 
-	if err := loadSubDir(x, nReader, NikonPreviewPtr, makerNoteNikon3PreviewFields); err != nil {
-	}
+	// TODO why was this empty?
+	// if err := loadSubDir(x, nReader, NikonPreviewPtr, makerNoteNikon3PreviewFields); err != nil {
+	// }
 	previewTag, err := x.Get(NikonPreviewImageStart)
 	if err == nil {
 		offset, _ := previewTag.Int64(0)
-		previewTag.SetInt(0, offset+int64(makerNoteOffset))
-		x.Update(NikonPreviewImageStart, previewTag)
+		err = previewTag.SetInt(0, offset+int64(makerNoteOffset))
+		if err != nil {
+			return err
+		}
+		err = x.Update(NikonPreviewImageStart, previewTag)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

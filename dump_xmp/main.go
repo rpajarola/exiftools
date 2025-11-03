@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 
-        _ "github.com/trimmer-io/go-xmp/models"
-        "github.com/trimmer-io/go-xmp/xmp"
+	_ "github.com/trimmer-io/go-xmp/models"
+	"github.com/trimmer-io/go-xmp/xmp"
 )
-
-const testDataDir = "testdata"
 
 func main() {
 	flag.Parse()
@@ -20,7 +18,7 @@ func main() {
 		fmt.Printf("os.Open(%v): %v\n", fname, err)
 		return
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 	bb, err := xmp.ScanPackets(f)
 	if err != nil {
 		fmt.Printf("xmp.ScanPackets(%v): %v\n", fname, err)
@@ -28,9 +26,9 @@ func main() {
 	}
 	d := &xmp.Document{}
 	if err := xmp.Unmarshal(bb[0], d); err != nil {
-                fmt.Printf("xmp.Unmarshal: %v", err)
+		fmt.Printf("xmp.Unmarshal: %v", err)
 		return
-        }
+	}
 
 	d.DumpNamespaces()
 	p, err := d.ListPaths()

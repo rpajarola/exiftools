@@ -230,7 +230,10 @@ func (*sony) Parse(x *exif.Exif) error {
 	// Sony maker notes are a single IFD directory with no header.
 	// Reader offsets need to be w.r.t. the original tiff structure.
 	buf := bytes.NewReader(append(make([]byte, m.ValOffset), m.Val...))
-	buf.Seek(int64(m.ValOffset)+offset, 0)
+	_, err = buf.Seek(int64(m.ValOffset)+offset, 0)
+	if err != nil {
+		return err
+	}
 	mkNotesDir, _, err := tiff.DecodeDir(buf, x.Tiff.Order)
 
 	if err != nil {
