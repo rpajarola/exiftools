@@ -12,11 +12,8 @@ require (
 
 require (
 	github.com/fatih/color v1.19.0 // indirect
-	github.com/golang/snappy v1.0.0 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.21 // indirect
-	github.com/montanaflynn/stats v0.9.0 // indirect
-	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	golang.org/x/sys v0.43.0 // indirect
 )
