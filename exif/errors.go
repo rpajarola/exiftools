@@ -24,6 +24,12 @@ func (de decodeError) Error() string {
 	return fmt.Sprintf("exif: decode failed (%v) ", de.cause.Error())
 }
 
+// Unwrap allows errors.Is/errors.As to see through to the underlying cause,
+// e.g. so callers can detect io.EOF regardless of this wrapper.
+func (de decodeError) Unwrap() error {
+	return de.cause
+}
+
 // IsShortReadTagValueError identifies a ErrShortReadTagValue error.
 func IsShortReadTagValueError(err error) bool {
 	de, ok := err.(decodeError)
