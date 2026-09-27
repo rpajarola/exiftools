@@ -1,8 +1,6 @@
 package exif
 
 import (
-	"fmt"
-
 	"github.com/rpajarola/exiftools/models"
 )
 
@@ -76,6 +74,5 @@ func (x Exif) PreviewImage(tags ...PreviewImageTag) (start int64, length int64, 
 			maxTag = tags[i]
 		}
 	}
-	fmt.Println(maxTag)
 	return int64(maxTag.Start), int64(maxTag.Length), nil
 }
