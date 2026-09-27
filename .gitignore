@@ -19,3 +19,6 @@ mknote/canontags/*.pm
 example/example
 dump_exif/dump_exif
 dump_xmp/dump_xmp
+
+# fetched by get_testfiles.sh from rpajarola/dedup-testdata
+/testdata/*

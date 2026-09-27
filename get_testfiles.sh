@@ -1,13 +1,10 @@
 #!/bin/bash
+# Fetches testdata/ from the shared rpajarola/dedup-testdata release, which
+# also backs rpajarola/dedup's fingerprint tests.
+set -euo pipefail
 
-git annex init || echo "git annex not initialized"
-git annex pull
-
-urlbase=https://cave.servium.ch/github/exiftools
-git annex list | while read where fname; do
-  case "${where}:${fname}" in
-  ??_??:*)
-    git annex addurl --file "${fname}" "${urlbase}/${fname}"
-  esac
-done
-
+cd "$(dirname "$0")/testdata"
+curl -L -o testdata-images.tar.gz \
+  https://github.com/rpajarola/dedup-testdata/releases/latest/download/testdata-images.tar.gz
+tar -xzf testdata-images.tar.gz
+rm testdata-images.tar.gz
