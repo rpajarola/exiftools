@@ -135,6 +135,27 @@ func processRawExifFile(r io.Reader) error {
 	return nil
 }
 
+// stripOptionalExifPrefix removes a leading "Exif\x00\x00" marker if present,
+// otherwise returns r unchanged (with any bytes it peeked at put back).
+//
+// The HEIF spec's Exif item starts with a 4-byte exif_tiff_header_offset
+// field, which goheif's extraction already accounts for. Some encoders
+// (observed on heic.digital's sample set) additionally embed a redundant
+// JPEG-APP1-style "Exif\x00\x00" marker right before the actual TIFF header;
+// others don't. Without stripping it when present, the TIFF decoder reads
+// 'E'/'x' as the byte-order marker and fails.
+func stripOptionalExifPrefix(r io.Reader) (io.Reader, error) {
+	var header [6]byte
+	n, err := io.ReadFull(r, header[:])
+	if err != nil && err != io.ErrUnexpectedEOF {
+		return nil, err
+	}
+	if string(header[:n]) == "Exif\x00\x00" {
+		return r, nil
+	}
+	return io.MultiReader(bytes.NewReader(header[:n]), r), nil
+}
+
 // processTIFFFile decodes TIFF data and returns the bytes reader and tiff structure
 func processTIFFFile(r io.Reader) (*bytes.Reader, *tiff.Tiff, error) {
 	// Functions below need the IFDs from the TIFF data to be stored in a
@@ -202,12 +223,14 @@ func DecodeWithOptions(r io.Reader, opts *DecodeOptions) (*Exif, error) {
 		if err != nil {
 			return nil, err
 		}
-		fallthrough
+		r, err = stripOptionalExifPrefix(r)
+		if err != nil {
+			return nil, err
+		}
+		er, tif, err = processTIFFFile(r)
 	case fileTypeRawExif:
-		if fType == fileTypeRawExif {
-			if err = processRawExifFile(r); err != nil {
-				return nil, err
-			}
+		if err = processRawExifFile(r); err != nil {
+			return nil, err
 		}
 		fallthrough
 	case fileTypeTIFF:
