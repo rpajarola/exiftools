@@ -1,7 +1,7 @@
 package xmp_test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -31,7 +31,7 @@ func TestUnMarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open test file: %v", err)
 	}
-	bb, err := ioutil.ReadAll(f)
+	bb, err := io.ReadAll(f)
 	if err != nil {
 		t.Fatalf("Could not read test file: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestBase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open test file: %v", err)
 	}
-	bb, err := ioutil.ReadAll(f)
+	bb, err := io.ReadAll(f)
 	if err != nil {
 		t.Fatalf("Could not read test file: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestDublinCore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not open test file: %v", err)
 	}
-	bb, err := ioutil.ReadAll(f)
+	bb, err := io.ReadAll(f)
 	if err != nil {
 		t.Fatalf("Could not read test file: %v", err)
 	}
