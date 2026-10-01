@@ -131,29 +131,6 @@ func CanonLens(lensType int) string {
 	return m[0]
 }
 
-// CanonImageSize -
-var canonImageSizeValues = map[int]string{
-	-1:  "n/a",
-	0:   "Large",
-	1:   "Medium",
-	2:   "Small",
-	5:   "Medium 1",
-	6:   "Medium 2",
-	7:   "Medium 3",
-	8:   "Postcard",
-	9:   "Widescreen",
-	10:  "Medium Widescreen",
-	14:  "Small 1",
-	15:  "Small 2",
-	16:  "Small 3",
-	128: "640x480 Movie",
-	129: "Medium Movie",
-	130: "Small Movie",
-	137: "1280x720 Movie",
-	142: "1920x1080 Movie",
-	143: "4096x2160 Movie",
-}
-
 // AFAreaMode -
 // Updated on March 19,2020
 var afAreaModeValues = map[int]string{
