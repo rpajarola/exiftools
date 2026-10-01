@@ -1,56 +1,13 @@
 # Known issues
 
 Found via a correctness-focused review of the core parsing packages (`tiff/`, `exif/`,
-`mknote/`), plus `go vet`/`staticcheck`. All four bugs below are verified against the
-actual source, not just theorized.
+`mknote/`), plus `go vet`/`staticcheck`.
 
-## Crash / DoS bugs in the parsing path
+## Unrecovered panic on malformed-but-plausible GPS tag data
 
-These trigger on crafted or corrupted input, not just normal camera files — worth fixing
-before parsing untrusted uploads.
+Reachable through a normal public API call, not deep internals.
 
-### 1. Integer overflow in tag-size bounds check allows multi-GB allocation from a ~12-byte tag
-
-`tiff/tag.go:161-165`: `valLen := size * t.Count` multiplies two `uint32`s with no
-overflow check, then compares `valLen` against `TagLengthCutoff` (4MB) to reject
-oversized tags. For a multi-byte type (e.g. `DTRational`, size 8) with
-`Count = 0x20000000` (536,870,912), `valLen` wraps to `0`, sailing past the cutoff.
-`convertVals()` (`tiff/tag.go:359`, `373`, and similarly `300`/`310`/`320`/`330`/`340`/
-`350`/`387`/`397` for the other multi-value types) then allocates
-`make([][]int64, int(t.Count))` using the raw, unwrapped `Count` — ~536M slice headers,
-~12.9GB. Runs unconditionally on every `tiff.Decode()` call. Affects any type with
-size ≥ 2 (Short/Long/Float/SLong/Rational/SRational/Double); the size-1 types
-(Byte/Ascii/SByte/Undefined) can't wrap this way.
-
-Fix: do the overflow check before multiplying (e.g. `t.Count > TagLengthCutoff/size`),
-or use `uint64` arithmetic for the comparison.
-
-### 2. IFD cycle detection only catches an immediate back-reference, not a longer cycle
-
-`tiff/tiff.go:71-95`: the loop tracks only `prev` (the previous IFD offset) and aborts
-if `offset == prev`. A 2-cycle (IFD A → IFD B → IFD A → IFD B → ...) never repeats "the
-immediately previous" offset, so the check never fires — `t.Dirs = append(t.Dirs, d)`
-runs forever, growing unbounded until OOM. `fingerprint/testdata/corrupt/infinite_loop_exif.jpg`
-in the consuming `dedup` repo suggests a cycle case was tested at some point; worth
-re-verifying it's actually a 2+ cycle and not just a self-loop, since a self-loop is the
-one case this check does catch.
-
-Fix: track a set of seen offsets, not just the last one.
-
-## Unrecovered panics on malformed-but-plausible tag data
-
-Both reachable through normal public API calls, not deep internals.
-
-### 3. `mknote/canon.go:134` (`processCameraSettingsMap`) indexes a static table with a raw file value
-
-`return CanonCameraSettingsFields[i][a]` — `a` comes straight from `tag.Int(i)`, i.e.
-whatever value the file's CanonCameraSettings tag declares, with no bounds check against
-`len(CanonCameraSettingsFields[i])`. A legitimate-looking but out-of-catalog value (e.g.
-`ContinuousDrive = 200`) panics with an unrecovered slice-index-out-of-range. Reachable
-via `CanonRaw.Get()`, used unconditionally whenever a caller requests Canon structured
-data.
-
-### 4. `exif/exif.go:458` (`parse3Rat2`) calls `tag.Rat2(i)` before checking `tag.Count`
+### `exif/exif.go:458` (`parse3Rat2`) calls `tag.Rat2(i)` before checking `tag.Count`
 
 The bounds-ish check (`if tag.Count < uint32(i+2) { break }`) runs *after* `tag.Rat2(i)`
 is already called and its result used. For `i == 0` with `tag.Count == 0` (a GPS tag
