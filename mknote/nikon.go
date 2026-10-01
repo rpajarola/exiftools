@@ -27,23 +27,21 @@ var (
 	NikonVRInfo         models.FieldName = "Nikon.VRInfo"         // A sub-IFD
 	NikonPictureControl models.FieldName = "Nikon.PictureControl" // A sub-IFD
 	NikonWorldTime      models.FieldName = "Nikon.WorldTime"      // A sub-IFD
-	// TODO: fix regression test
-	// This breaks regression test due to string literal in generated code
-	// NikonISOInfo        models.FieldName = "Nikon.ISOInfo"        // A sub-IFD
-	NikonAFInfo        models.FieldName = "Nikon.AFInfo"        // A sub-IFD
-	NikonColorBalance  models.FieldName = "Nikon.ColorBalance"  // A sub-IFD
-	NikonLensData      models.FieldName = "Nikon.LensData"      // A sub-IFD
-	NikonSerialNO      models.FieldName = "Nikon.SerialNO"      // usually starts with "NO="
-	NikonFlashInfo     models.FieldName = "Nikon.FlashInfo"     // A sub-IFD
-	NikonMultiExposure models.FieldName = "Nikon.MultiExposure" // A sub-IFD
-	NikonAFInfo2       models.FieldName = "Nikon.AFInfo2"       // A sub-IFD
-	NikonFileInfo      models.FieldName = "Nikon.FileInfo"      // A sub-IFD
-	NikonAFTune        models.FieldName = "Nikon.AFTune"        // A sub-IFD
-	NikonPreviewPtr    models.FieldName = "Nikon.PreviewSubIFD" // A sub-IFD
-	Nikon3_0x000a      models.FieldName = "Nikon3.0x000a"
-	Nikon3_0x009b      models.FieldName = "Nikon3.0x009b"
-	Nikon3_0x009f      models.FieldName = "Nikon3.0x009f"
-	Nikon3_0x00a3      models.FieldName = "Nikon3.0x00a3"
+	NikonISOInfo        models.FieldName = "Nikon.ISOInfo"        // A sub-IFD
+	NikonAFInfo         models.FieldName = "Nikon.AFInfo"         // A sub-IFD
+	NikonColorBalance   models.FieldName = "Nikon.ColorBalance"   // A sub-IFD
+	NikonLensData       models.FieldName = "Nikon.LensData"       // A sub-IFD
+	NikonSerialNO       models.FieldName = "Nikon.SerialNO"       // usually starts with "NO="
+	NikonFlashInfo      models.FieldName = "Nikon.FlashInfo"      // A sub-IFD
+	NikonMultiExposure  models.FieldName = "Nikon.MultiExposure"  // A sub-IFD
+	NikonAFInfo2        models.FieldName = "Nikon.AFInfo2"        // A sub-IFD
+	NikonFileInfo       models.FieldName = "Nikon.FileInfo"       // A sub-IFD
+	NikonAFTune         models.FieldName = "Nikon.AFTune"         // A sub-IFD
+	NikonPreviewPtr     models.FieldName = "Nikon.PreviewSubIFD"  // A sub-IFD
+	Nikon3_0x000a       models.FieldName = "Nikon3.0x000a"
+	Nikon3_0x009b       models.FieldName = "Nikon3.0x009b"
+	Nikon3_0x009f       models.FieldName = "Nikon3.0x009f"
+	Nikon3_0x00a3       models.FieldName = "Nikon3.0x00a3"
 )
 
 // Nikon version 3 Maker Notes fields (used by E5400, SQ, D2H, D70, and newer)
@@ -81,7 +79,7 @@ var makerNoteNikon3Fields = map[uint16]models.FieldName{
 	0x0022: ActiveDLighting,
 	0x0023: NikonPictureControl,
 	0x0024: NikonWorldTime,
-	// 0x0025: NikonISOInfo,
+	0x0025: NikonISOInfo,
 	0x002a: VignetteControl,
 	0x0080: ImageAdjustment,
 	0x0081: ToneComp,
