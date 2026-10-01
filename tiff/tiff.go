@@ -68,7 +68,12 @@ func Decode(r io.Reader) (*Tiff, error) {
 
 	// load IFD's
 	var d *Dir
-	prev := offset
+	// Tracks every IFD offset visited so far, not just the previous one:
+	// checking only the previous offset catches a self-loop (A -> A) or an
+	// immediate back-reference (A -> B -> A), but not a longer cycle
+	// (A -> B -> A -> B -> ...), which would otherwise append to t.Dirs
+	// forever.
+	seen := map[int32]bool{offset: true}
 	for offset != 0 {
 		// seek to offset
 		_, err := buf.Seek(int64(offset), 0)
@@ -86,10 +91,12 @@ func Decode(r io.Reader) (*Tiff, error) {
 			return nil, err
 		}
 
-		if offset == prev {
-			return nil, errors.New("tiff: recursive IFD")
+		if offset != 0 {
+			if seen[offset] {
+				return nil, errors.New("tiff: recursive IFD")
+			}
+			seen[offset] = true
 		}
-		prev = offset
 
 		t.Dirs = append(t.Dirs, d)
 	}

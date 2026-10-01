@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 var dataDir = flag.String("test_data_dir", ".", "Directory where the data files for testing are located")
@@ -219,6 +220,42 @@ func TestDecode(t *testing.T) {
 	}
 
 	t.Log(tif)
+}
+
+// TestDecode_ifdCycle guards against IFD cycle detection only checking the
+// immediately previous offset: a 2-cycle (IFD A -> IFD B -> IFD A -> ...)
+// never repeats "the previous" offset, so that check alone never fires,
+// appending to t.Dirs forever. Builds a minimal TIFF with two zero-tag IFDs
+// pointing at each other.
+func TestDecode_ifdCycle(t *testing.T) {
+	const ifdA, ifdB = 8, 14 // byte offsets; header is 8 bytes, each IFD is 6
+
+	data := make([]byte, 20)
+	copy(data[0:2], "II")
+	binary.LittleEndian.PutUint16(data[2:4], 42)
+	binary.LittleEndian.PutUint32(data[4:8], ifdA)
+
+	binary.LittleEndian.PutUint16(data[ifdA:ifdA+2], 0)    // IFD A: 0 tags
+	binary.LittleEndian.PutUint32(data[ifdA+2:ifdA+6], ifdB) // -> IFD B
+
+	binary.LittleEndian.PutUint16(data[ifdB:ifdB+2], 0)    // IFD B: 0 tags
+	binary.LittleEndian.PutUint32(data[ifdB+2:ifdB+6], ifdA) // -> IFD A (cycle)
+
+	done := make(chan struct{})
+	var err error
+	go func() {
+		_, err = Decode(bytes.NewReader(data))
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		if err == nil {
+			t.Fatal("Decode succeeded on a 2-cycle IFD chain; want a recursive-IFD error")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Decode did not return within 5s on a 2-cycle IFD chain; likely looping forever")
+	}
 }
 
 // TestDecodeTag_overflowCount guards against size*Count silently wrapping
