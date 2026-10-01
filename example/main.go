@@ -7,10 +7,6 @@ import (
 	"os"
 	"time"
 
-	"encoding/json"
-
-	"github.com/TylerBrock/colorjson"
-
 	"github.com/rpajarola/exiftools/exif"
 	"github.com/rpajarola/exiftools/models"
 	"github.com/rpajarola/exiftools/mknote"
@@ -150,16 +146,4 @@ func metadata(f *os.File) {
 	}
 
 	//fmt.Println(m)
-}
-
-func colorJSON(b []byte) {
-	var obj map[string]interface{}
-	json.Unmarshal([]byte(b), &obj)
-	// Make a custom formatter with indent set
-	f := colorjson.NewFormatter()
-	f.Indent = 4
-
-	// Marshall the Colorized JSON
-	s, _ := f.Marshal(obj)
-	fmt.Println(string(s))
 }

@@ -11,8 +11,6 @@ import (
 	"github.com/rpajarola/exiftools/tiff"
 )
 
-const testDataDir = "testdata"
-
 func main() {
 	flag.Parse()
 	fname := flag.Arg(0)

@@ -9,8 +9,6 @@ import (
         "github.com/trimmer-io/go-xmp/xmp"
 )
 
-const testDataDir = "testdata"
-
 func main() {
 	flag.Parse()
 	fname := flag.Arg(0)
