@@ -452,10 +452,13 @@ func (t *Tag) Rat(i int) (*big.Rat, error) {
 
 // Rat2 returns the tag's i'th value as a rational number represented by a
 // numerator-denominator pair. It returns an error if the tag's Format is not
-// RatVal. It panics if i is out of range.
+// RatVal, or if i is out of range.
 func (t *Tag) Rat2(i int) (num, den int64, err error) {
 	if t.format != RatVal {
 		return 0, 0, t.typeErr(RatVal)
+	}
+	if i >= len(t.ratVals) {
+		return 0, 0, errors.New("index out of range in ratVals")
 	}
 	return t.ratVals[i][0], t.ratVals[i][1], nil
 }

@@ -285,6 +285,28 @@ func TestDecodeTag_overflowCount(t *testing.T) {
 	}
 }
 
+// TestRat2_outOfRange guards against Rat2 indexing t.ratVals directly with
+// no bounds check, unlike its siblings Int() (panic-recovered) and Int64()
+// (explicitly bounds-checked). A rational tag with Count == 0 (declaring
+// zero values, as a corrupt or deliberately crafted GPS tag might) leaves
+// ratVals empty, so Rat2(0) must return an error instead of panicking.
+func TestRat2_outOfRange(t *testing.T) {
+	data := make([]byte, 12)
+	binary.BigEndian.PutUint16(data[0:2], 1)
+	binary.BigEndian.PutUint16(data[2:4], uint16(DTRational))
+	binary.BigEndian.PutUint32(data[4:8], 0) // Count = 0
+	binary.BigEndian.PutUint32(data[8:12], 0)
+
+	tg, err := DecodeTag(bytes.NewReader(data), binary.BigEndian)
+	if err != nil {
+		t.Fatalf("DecodeTag: %v", err)
+	}
+
+	if _, _, err := tg.Rat2(0); err == nil {
+		t.Fatal("Rat2(0) succeeded on a tag with Count == 0; want an error, not a panic")
+	}
+}
+
 func TestDecodeTag_blob(t *testing.T) {
 	buf := bytes.NewReader(data())
 	buf.Seek(10, 1)
