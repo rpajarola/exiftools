@@ -597,6 +597,16 @@ type appSec struct {
 	data   []byte
 }
 
+// noExifIfEOF reports that no EXIF data is present (ErrNoExif) when err is
+// io.EOF, since that's what hitting the end of the file while still
+// searching for the marker means; any other error is returned unchanged.
+func noExifIfEOF(err error) error {
+	if err == io.EOF {
+		return ErrNoExif
+	}
+	return err
+}
+
 // newAppSec finds marker in r and returns the corresponding application data
 // section.
 func newAppSec(marker byte, r io.Reader) (*appSec, error) {
@@ -607,11 +617,11 @@ func newAppSec(marker byte, r io.Reader) (*appSec, error) {
 	// seek to marker
 	for dataLen == 0 {
 		if _, err := br.ReadBytes(0xFF); err != nil {
-			return nil, err
+			return nil, noExifIfEOF(err)
 		}
 		c, err := br.ReadByte()
 		if err != nil {
-			return nil, err
+			return nil, noExifIfEOF(err)
 		} else if c != marker {
 			continue
 		}

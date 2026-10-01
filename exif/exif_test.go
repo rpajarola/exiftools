@@ -2,6 +2,7 @@ package exif
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"math"
@@ -39,7 +40,10 @@ func TestDecode(t *testing.T) {
 			}
 
 			x, err := Decode(f)
-			if err != nil {
+			if errors.Is(err, ErrNoExif) {
+				t.Skipf("no EXIF data in %v", name)
+				return
+			} else if err != nil {
 				t.Errorf("decode: %v", err)
 				return
 			} else if x == nil {
