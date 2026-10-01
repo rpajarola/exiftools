@@ -379,19 +379,39 @@ func (x *Exif) DateTime(fields ...models.FieldName) (time.Time, error) {
 
 // TimeZone -
 func (x *Exif) TimeZone() (*time.Location, error) {
-	// TODO: parse more timezone fields (e.g. Nikon WorldTime).
-	timeInfo, err := x.Get("Canon.TimeInfo")
-	if err != nil {
-		return nil, err
+	if timeInfo, err := x.Get("Canon.TimeInfo"); err == nil {
+		if timeInfo.Count < 2 {
+			return nil, errors.New("Canon.TimeInfo does not contain timezone")
+		}
+		// Canon.TimeInfo's timezone field is declared as the TIFF
+		// unsigned Long type, but holds a signed offset (verified
+		// against exiftool's output for a real CR2 file, including a
+		// negative, west-of-UTC zone): Int() zero-extends it per its
+		// declared type, so reinterpret the bit pattern as int32 to
+		// recover the sign.
+		offsetMinutesRaw, err := timeInfo.Int(1)
+		if err != nil {
+			return nil, err
+		}
+		offsetMinutes := int(int32(offsetMinutesRaw))
+		return time.FixedZone("", offsetMinutes*60), nil
 	}
-	if timeInfo.Count < 2 {
-		return nil, errors.New("Canon.TimeInfo does not contain timezone")
+
+	if worldTime, err := x.Get("Nikon.WorldTime"); err == nil {
+		// Nikon.WorldTime is a packed 4-byte structure, not a typed tag:
+		// a 2-byte signed timezone offset in minutes from UTC, a 1-byte
+		// daylight-savings flag, and a 1-byte date-display-format value.
+		// The 2-byte offset is stored in the file's own byte order, same
+		// as everything else in the maker note (verified against
+		// exiftool's output for a real NEF file).
+		if len(worldTime.Val) < 2 {
+			return nil, errors.New("Nikon.WorldTime does not contain timezone")
+		}
+		offsetMinutes := int(int16(x.Tiff.Order.Uint16(worldTime.Val[0:2])))
+		return time.FixedZone("", offsetMinutes*60), nil
 	}
-	offsetMinutes, err := timeInfo.Int(1)
-	if err != nil {
-		return nil, err
-	}
-	return time.FixedZone("", offsetMinutes*60), nil
+
+	return nil, errors.New("no timezone information found")
 }
 
 func ratFloat(num, dem int64) float64 {
