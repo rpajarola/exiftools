@@ -730,7 +730,7 @@ func DecodeWithParseHeaderAndOptions(r io.Reader, opts *DecodeOptions) (x *Exif,
 // Table 1 p 31: TIFF Headers
 func checkExifHeader(data []byte) error {
 	if len(data) < 8 {
-		return fmt.Errorf("Invalid EXIF header: too short (length=%d)", len(data))
+		return fmt.Errorf("invalid EXIF header: too short (length=%d)", len(data))
 	}
 
 	byteorder := binary.BigEndian.Uint16(data[0:2])
@@ -741,12 +741,12 @@ func checkExifHeader(data []byte) error {
 	case 0x4949: // II aka Intel
 		order = binary.LittleEndian
 	default:
-		return fmt.Errorf("Invalid EXIF header: unrecognized byte order %04x", byteorder)
+		return fmt.Errorf("invalid EXIF header: unrecognized byte order %04x", byteorder)
 	}
 
 	fortytwo := order.Uint16(data[2:4])
 	if fortytwo != 42 {
-		return fmt.Errorf("Invalid EXIF header: got %v, want 42", fortytwo)
+		return fmt.Errorf("invalid EXIF header: got %v, want 42", fortytwo)
 	}
 	return nil
 }

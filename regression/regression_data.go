@@ -2446,7 +2446,7 @@ var regressExpected = map[string]map[string]string{
 		"YResolution":                      "\"350/1\"",
 	},
 	"Adobe Photoshop Lightroom.XMP": {
-		"ERROR": "Invalid EXIF header: too short (length=1)",
+		"ERROR": "invalid EXIF header: too short (length=1)",
 	},
 	"Apple iPhone 4 B9AEA6B8FE2068118083C9A827F66721.jpg": {
 		"ApertureValue":                    "\"24361/8200\"",
@@ -7479,6 +7479,13 @@ var regressExpected = map[string]map[string]string{
 		"YCbCrPositioning":                 "1",
 		"YResolution":                      "\"72/1\"",
 	},
+	"imgphash_cat_medium.jpg": {
+		"ERROR": "invalid EXIF header: too short (length=1)",
+	},
+	"imgphash_cat_sky.jpg": {
+		"ERROR": "invalid EXIF header: too short (length=1)",
+	},
+	"imgphash_cat_smiling.jpg": {},
 	"park.heic": {
 		"ApertureValue":                    "\"2159/1273\"",
 		"Apple.AEAverage":                  "157",
@@ -7797,6 +7804,6 @@ var regressExpected = map[string]map[string]string{
 		"YResolution":                      "\"720000/10000\"",
 	},
 	"test.xmp": {
-		"ERROR": "Invalid EXIF header: too short (length=1)",
+		"ERROR": "invalid EXIF header: too short (length=1)",
 	},
 }
