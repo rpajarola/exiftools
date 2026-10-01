@@ -1,20 +1,10 @@
 # Known issues
 
 Found via a correctness-focused review of the core parsing packages (`tiff/`, `exif/`,
-`mknote/`), plus `go vet`/`staticcheck`.
-
-## Unrecovered panic on malformed-but-plausible GPS tag data
-
-Reachable through a normal public API call, not deep internals.
-
-### `exif/exif.go:458` (`parse3Rat2`) calls `tag.Rat2(i)` before checking `tag.Count`
-
-The bounds-ish check (`if tag.Count < uint32(i+2) { break }`) runs *after* `tag.Rat2(i)`
-is already called and its result used. For `i == 0` with `tag.Count == 0` (a GPS tag
-present but declaring zero rational values), `tag.Rat2(0)` does `t.ratVals[0][0]` on an
-empty slice and panics. Unlike `Int()` (which has `defer recover()`) or `Int64()` (which
-explicitly bounds-checks), `Rat2()` (`tiff/tag.go:451-456`) has neither. Reachable via the
-public `LatLong()` / GPS-parsing path.
+`mknote/`), plus `go vet`/`staticcheck`. The crash/DoS bugs found that way (uint32
+overflow in the tag-size bounds check, IFD cycle detection missing longer cycles,
+`tag.Rat2` panicking on an empty rational tag) are all fixed as of this file's git
+history.
 
 ## Lower-severity findings (staticcheck / go vet)
 
