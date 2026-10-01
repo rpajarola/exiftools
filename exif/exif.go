@@ -368,13 +368,11 @@ func (x *Exif) DateTime(fields ...models.FieldName) (time.Time, error) {
 		}
 	}
 
-	// TODO(bradfitz,mpl): look for timezone offset, GPS time, etc.
-	//timeZone := time.Local
-	//if tz, _ := x.TimeZone(); tz != nil {
-	//	timeZone = tz
-	//}
-	return time.Parse(exifTimeLayout, dateStr)
-	//return time.ParseInLocation(exifTimeLayout, dateStr, timeZone)
+	timeZone := time.Local
+	if tz, err := x.TimeZone(); err == nil && tz != nil {
+		timeZone = tz
+	}
+	return time.ParseInLocation(exifTimeLayout, dateStr, timeZone)
 }
 
 // TimeZone -
