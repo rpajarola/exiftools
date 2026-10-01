@@ -7,6 +7,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -218,6 +219,33 @@ func TestDecode(t *testing.T) {
 	}
 
 	t.Log(tif)
+}
+
+// TestDecodeTag_overflowCount guards against size*Count silently wrapping
+// past TagLengthCutoff in uint32 arithmetic (e.g. a DTRational tag, size 8,
+// with Count = 1<<32/8 wraps valLen to 0). Without the overflow check, the
+// DecodeTag call below still returns a non-nil error (an io.EOF from
+// convertVals() trying and failing to read rational values out of an empty
+// buffer) -- but only *after* convertVals() has already called
+// make([][]int64, int(t.Count)), i.e. attempted a ~12.9GB allocation from a
+// 12-byte tag. So this asserts on the error's content, not just its
+// presence: the fast, safe rejection returns the "tag length too large"
+// error from the bounds check itself, before any such allocation.
+func TestDecodeTag_overflowCount(t *testing.T) {
+	const count = 1 << 32 / 8 // overflows size(DTRational)=8 * count back to 0
+	data := make([]byte, 12)
+	binary.BigEndian.PutUint16(data[0:2], 1)
+	binary.BigEndian.PutUint16(data[2:4], uint16(DTRational))
+	binary.BigEndian.PutUint32(data[4:8], count)
+	binary.BigEndian.PutUint32(data[8:12], 0)
+
+	_, err := DecodeTag(bytes.NewReader(data), binary.BigEndian)
+	if err == nil {
+		t.Fatal("DecodeTag succeeded on a tag whose size*Count overflows uint32; want an error")
+	}
+	if !strings.Contains(err.Error(), "tag length too large") {
+		t.Fatalf("DecodeTag error = %q; want the bounds check to reject this before any allocation, not a downstream read failure", err)
+	}
 }
 
 func TestDecodeTag_blob(t *testing.T) {
