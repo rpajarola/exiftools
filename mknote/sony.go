@@ -35,7 +35,12 @@ var makerNoteSonyFields = map[uint16]models.FieldName{
 	0x9050: sony0x9050,
 }
 
-var Sony0x9050Fields = map[uint16]models.FieldName{}
+// Sony0x9050Fields is populated once, below (after Sony0x9050BinaryTags is
+// declared), rather than lazily inside Parse(): it's the same, fixed
+// mapping every time, and Parse() can run concurrently for different files
+// (e.g. under t.Parallel()), so mutating a shared package-level map from
+// inside Parse() was an unsynchronized concurrent write.
+var Sony0x9050Fields map[uint16]models.FieldName
 
 type SonyDataType int
 
@@ -189,6 +194,13 @@ var Sony0x9050BinaryTags = []SonyBinaryTag{
 	},
 }
 
+func init() {
+	Sony0x9050Fields = make(map[uint16]models.FieldName, len(Sony0x9050BinaryTags))
+	for i, bt := range Sony0x9050BinaryTags {
+		Sony0x9050Fields[uint16(i)] = bt.fieldName
+	}
+}
+
 // Parse decodes Sony makernote data found in x and adds it to x.
 func (*sony) Parse(x *exif.Exif) error {
 	m, err := x.Get(models.Model)
@@ -247,7 +259,6 @@ func (*sony) Parse(x *exif.Exif) error {
 	descramble0x9050(m9050.Val)
 
 	for i, bt := range Sony0x9050BinaryTags {
-		Sony0x9050Fields[uint16(i)] = bt.fieldName
 		if t := makeBinaryTag(&bt, model, m9050.Val, i); t != nil {
 			m9050Dir.Tags = append(m9050Dir.Tags, t)
 		}
