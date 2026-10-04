@@ -83,8 +83,11 @@ const (
 // detectFileType examines the header to determine the file format
 func detectFileType(header []byte) fileType {
 	switch string(header[0:4]) {
-	case "II*\x00", "MM\x00*":
-		// TIFF - Little/Big endian
+	case "II*\x00", "MM\x00*",
+		"IIU\x00", // Panasonic RW2
+		"IIRO":    // Olympus ORF
+		// TIFF - Little/Big endian, or a vendor RAW variant that's
+		// otherwise ordinary TIFF (see tiff.validMarkers).
 		return fileTypeTIFF
 	case "Exif":
 		return fileTypeRawExif

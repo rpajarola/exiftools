@@ -59,6 +59,11 @@ const (
 	DTSRational DataType = 10
 	DTFloat     DataType = 11
 	DTDouble    DataType = 12
+	// DTIfd is an unsigned 4-byte offset to a sub-IFD, used by some
+	// vendor maker notes (e.g. Olympus) and later EXIF/DNG extensions
+	// for self-describing sub-directory pointer tags. It's encoded
+	// exactly like DTLong.
+	DTIfd DataType = 13
 )
 
 var typeNames = map[DataType]string{
@@ -74,6 +79,7 @@ var typeNames = map[DataType]string{
 	DTSRational: "signed rational",
 	DTFloat:     "float",
 	DTDouble:    "double",
+	DTIfd:       "ifd",
 }
 
 // typeSize specifies the size in bytes of each type.
@@ -90,6 +96,7 @@ var typeSize = map[DataType]uint32{
 	DTSRational: 8,
 	DTFloat:     4,
 	DTDouble:    8,
+	DTIfd:       4,
 }
 
 // Tag reflects the parsed content of a tiff IFD tag.
@@ -316,7 +323,7 @@ func (t *Tag) convertVals() error {
 			}
 			t.intVals[i] = int64(v)
 		}
-	case DTLong:
+	case DTLong, DTIfd:
 		var v uint32
 		t.intVals = make([]int64, int(t.Count))
 		for i := range t.intVals {
@@ -407,7 +414,7 @@ func (t *Tag) convertVals() error {
 	}
 
 	switch t.Type {
-	case DTByte, DTShort, DTLong, DTSByte, DTSShort, DTSLong:
+	case DTByte, DTShort, DTLong, DTSByte, DTSShort, DTSLong, DTIfd:
 		t.format = IntVal
 	case DTRational, DTSRational:
 		t.format = RatVal

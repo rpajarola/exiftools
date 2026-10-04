@@ -17,6 +17,18 @@ type ReadAtReader interface {
 	io.ReaderAt
 }
 
+// validMarkers lists the 2-byte value following the byte-order marker that
+// is accepted as a valid start of a TIFF structure. 42 is the standard TIFF
+// 6.0 marker; the others are vendor-specific RAW formats that are otherwise
+// ordinary little-endian TIFF, but use a different marker so that TIFF
+// readers which assume baseline TIFF semantics (and would otherwise
+// misinterpret the RAW sensor data) refuse to touch them.
+var validMarkers = map[int16]bool{
+	42:    true, // standard TIFF 6.0
+	85:    true, // Panasonic RW2 ("II" 0x55 0x00)
+	20306: true, // Olympus ORF ("II" 'R' 'O')
+}
+
 // Tiff provides access to a decoded tiff data structure.
 type Tiff struct {
 	// Dirs is an ordered slice of the tiff's Image File Directories (IFDs).
@@ -55,7 +67,7 @@ func Decode(r io.Reader) (*Tiff, error) {
 	// check for special tiff marker
 	var sp int16
 	err = binary.Read(buf, t.Order, &sp)
-	if err != nil || sp != 42 {
+	if err != nil || !validMarkers[sp] {
 		return nil, errors.New("tiff: could not find special tiff marker")
 	}
 

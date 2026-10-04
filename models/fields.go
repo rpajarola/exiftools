@@ -115,6 +115,10 @@ const (
 const (
 	PreviewImageStart  FieldName = "PreviewImageStart"
 	PreviewImageLength FieldName = "PreviewImageLength"
+	// PanasonicJpgFromRaw holds a Panasonic RW2 file's embedded JPEG
+	// preview directly as its own value (a "blob" tag), rather than as a
+	// separate start/length offset pair into the rest of the file.
+	PanasonicJpgFromRaw FieldName = "Panasonic.JpgFromRaw"
 )
 
 // GPS fields
@@ -188,6 +192,7 @@ var ExifFields = map[uint16]FieldName{
 	// Preview tags
 	0x0111: PreviewImageStart,
 	0x0117: PreviewImageLength,
+	0x002e: PanasonicJpgFromRaw,
 
 	// Other tags
 	0x0132: DateTime,
