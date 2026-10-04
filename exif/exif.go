@@ -371,7 +371,16 @@ func (x *Exif) DateTime(fields ...models.FieldName) (time.Time, error) {
 		}
 	}
 
-	timeZone := time.Local
+	// EXIF's DateTime/DateTimeOriginal string has no timezone of its own;
+	// it's the camera's local time at capture, which is unknowable here
+	// without a maker-note-specific timezone tag (Canon.TimeInfo,
+	// Nikon.WorldTime, below). Defaulting to time.Local would make the
+	// result depend on whatever timezone the calling machine happens to
+	// be in, not anything about the photo -- so default to UTC instead,
+	// which at least makes DateTime() deterministic across machines (the
+	// absolute instant is still wrong by the unknown real offset either
+	// way, same as it would be with any other fixed fallback).
+	timeZone := time.UTC
 	if tz, err := x.TimeZone(); err == nil && tz != nil {
 		timeZone = tz
 	}
