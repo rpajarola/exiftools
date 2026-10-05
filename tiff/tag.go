@@ -546,7 +546,16 @@ func (t *Tag) MarshalJSON() ([]byte, error) {
 		if s, err := t.StringVal(); err != nil {
 			return []byte(`null`), err
 		} else {
-			return json.Marshal(s)
+			// Some camera maker-note ASCII fields carry a stray
+			// non-UTF8 byte (observed in a real Nikon
+			// ImageStabilization tag). json.Marshal's choice of how
+			// to represent invalid UTF-8 isn't part of its documented
+			// contract and has changed between Go versions, which
+			// made this non-deterministic across toolchains; replace
+			// invalid bytes with U+FFFD ourselves first so the input
+			// to json.Marshal is always valid UTF-8, which it encodes
+			// the same way everywhere.
+			return json.Marshal(strings.ToValidUTF8(s, "�"))
 		}
 	case UndefVal:
 		return nullString(t.Val), nil
